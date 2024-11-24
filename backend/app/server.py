@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from api import router
+from app.seed_db import seed_db
 from core.config import config
 from core.exceptions.base import CustomException
 from core.fastapi.dependencies.logging import Logging
@@ -116,6 +117,8 @@ def create_app() -> FastAPI:
         dependencies=[Depends(Logging)],
         middleware=make_middleware(),
     )
+
+    seed_db()
 
     return app_
 
