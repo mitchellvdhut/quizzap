@@ -1,0 +1,6 @@
+@mixin tile($number, $color) {
+  .tile-#{number} {
+    background-color: $color;
+    box-shadow: -6px 6px 0 darken($color, 15%);
+  }
+}
