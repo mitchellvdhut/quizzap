@@ -1,5 +1,3 @@
-from app.question.exceptions.question import QuestionNotFoundException
-from app.question.schemas.question import CreateQuestionSchema
 from app.quiz.schemas.quiz import CreateQuizSchema, UpdateQuizSchema, UploadQuizSchema
 from app.quiz.exceptions.quiz import DuplicateNameException, QuizNotFoundException
 from app.quiz.repository.quiz import QuizRepository
@@ -10,13 +8,17 @@ class QuizService:
     def __init__(self, session) -> None:
         self.repo = QuizRepository(session)
 
-    async def upload_quiz(self, schema: UploadQuizSchema, current_user: int) -> Quiz:
+    async def upload_quiz(
+        self,
+        schema: UploadQuizSchema,
+        current_user: int,
+    ) -> Quiz:
         quiz = self.repo.get_by_name(schema.name)
 
         if quiz and quiz.id != schema.id:
             raise DuplicateNameException
-        
-        else: 
+
+        else:
             quiz = Quiz()
 
         quiz.name = schema.name
@@ -33,8 +35,7 @@ class QuizService:
 
             for answer in question.answers:
                 new_answer = Answer(
-                    description=answer.description,
-                    is_correct=answer.is_correct
+                    description=answer.description, is_correct=answer.is_correct
                 )
 
                 new_question.answers.append(new_answer)
@@ -50,7 +51,11 @@ class QuizService:
     async def get_by_name(self, name) -> Quiz:
         return self.repo.get_by_name(name)
 
-    async def create_quiz(self, schema: CreateQuizSchema, current_user: int) -> Quiz:
+    async def create_quiz(
+        self,
+        schema: CreateQuizSchema,
+        current_user: int,
+    ) -> Quiz:
         quiz = self.repo.get_by_name(schema.name)
 
         if quiz:
@@ -63,24 +68,37 @@ class QuizService:
         )
         return self.repo.create(quiz)
 
-    async def delete_quiz(self, quiz_id: int) -> None:
+    async def delete_quiz(
+        self,
+        quiz_id: int,
+    ) -> None:
         quiz = self.repo.get_by_id(quiz_id)
         if not quiz:
             raise QuizNotFoundException
 
         self.repo.delete(quiz)
 
-    async def update_quiz(self, quiz_id: int, schema: UpdateQuizSchema) -> Quiz:
+    async def update_quiz(
+        self,
+        quiz_id: int,
+        schema: UpdateQuizSchema,
+    ) -> Quiz:
         quiz = self.repo.get_by_id(quiz_id)
         if not quiz:
             raise QuizNotFoundException
 
-        params = {"name": schema.name, "description": schema.description}
+        params = {
+            "name": schema.name,
+            "description": schema.description,
+        }
 
         self.repo.update_by_id(quiz_id, params)
         return self.repo.get_by_id(quiz_id)
 
-    async def get_quiz(self, quiz_id: int) -> Quiz:
+    async def get_quiz(
+        self,
+        quiz_id: int,
+    ) -> Quiz:
         quiz = self.repo.get_by_id(quiz_id)
         if not quiz:
             raise QuizNotFoundException
@@ -89,35 +107,3 @@ class QuizService:
 
     async def get_quizzes(self) -> list[Quiz]:
         return self.repo.get()
-    
-    async def get_quiz_questions(self, quiz_id: int) -> list[Question]:
-        quiz = await self.get_quiz(quiz_id)
-        return quiz.questions
-
-    async def get_quiz_question(self, quiz_id: int, question_id: int) -> Question:
-        quiz = await self.get_quiz(quiz_id)
-        question = next((q for q in quiz.questions if q.id == question_id), None)
-        if not question:
-            raise QuestionNotFoundException
-        return question
-
-    async def create_quiz_question(self, quiz_id: int, schema: CreateQuestionSchema):
-        quiz = await self.get_quiz(quiz_id)
-
-        question = Question(
-            name=schema.name,
-            description=schema.description
-        )
-
-        quiz.questions.append(question)
-
-        self.repo.session.commit()
-        self.repo.session.refresh(question)
-
-        return question
-
-    async def update_quiz_question(self):
-        ...
-
-    async def delete_quiz_question(self):
-        ...

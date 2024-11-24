@@ -47,6 +47,7 @@ class Question(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    time_limit: Mapped[float] = mapped_column(default=30.0)
     quiz_id: Mapped[int] = mapped_column(ForeignKey("quiz.id"))
 
     quiz: Mapped[Quiz] = relationship(back_populates="questions")
