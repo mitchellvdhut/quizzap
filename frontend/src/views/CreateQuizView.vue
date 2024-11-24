@@ -23,15 +23,15 @@ const questions = ref<Question[]>(
       answers: [
         {
           text: "",
-          correct: true,
+          correct: false,
         },
         {
           text: "",
-          correct: true,
+          correct: false,
         },
         {
           text: "",
-          correct: true,
+          correct: false,
         },
         {
           text: "",
@@ -53,15 +53,15 @@ function addQuestion() {
     },
     {
       text: "",
-      correct: true,
+      correct: false,
     },
     {
       text: "",
-      correct: true,
+      correct: false,
     },
     {
       text: "",
-      correct: true,
+      correct: false,
     }
   ],
     answeringTimeInSeconds: 20

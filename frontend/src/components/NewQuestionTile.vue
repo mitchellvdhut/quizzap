@@ -2,18 +2,26 @@
   <div class="newQuestionTile">
     <div class="newQuestionTile__header">
       <p>Vraag:</p>
-      <button class="remove_button" @click="() => onRemove(index)">DELETE</button>
+      <div class="header_right">
+        Tijd:
+        <input class="time_input" type="number" :value="question.answeringTimeInSeconds">
+        <button class="remove_button" @click="() => onRemove(index)">DELETE</button>
+      </div>
     </div>
     <input v-model="question.question" placeholder="Vul hier je vraag in" />
     <p>Antwoorden:</p>
     <div class="answers-list">
-      <input class="answer-field" v-for="(answer, j) in question.answers" v-model="question.answers[j].text" :placeholder="`Antwoord ${j}`" />
+      <div class="answer" v-for="(answer, j) in question.answers" >
+        <input type="checkbox" v-model="correctAnswers" :value="j">
+        <input class="answer-field" v-model="question.answers[j].text" :placeholder="`Antwoord ${j}`" />
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import type {Question} from "@/types";
+import {ref} from "vue";
 
 const props = defineProps<{
   index: number;
@@ -21,6 +29,7 @@ const props = defineProps<{
   onRemove: (index: number) => void
 }>()
 
+const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) => answer.correct ? index : -1).filter(index => index !== -1));
 </script>
 
 <style lang="scss" scoped>
@@ -34,21 +43,6 @@ const props = defineProps<{
   padding: 1.5rem;
   color: white;
   gap: 1rem;
-
-  .newQuestionTile__header {
-    display: flex;
-    justify-content: space-between;
-
-    .remove_button {
-      background-color: white;
-      border-radius: 5px;
-      width: 48px;
-      height: 48px;
-      border: none;
-      cursor: pointer;
-      user-select: none;
-    }
-  }
 
   input {
     width: calc(100% - 0.5rem);
@@ -69,6 +63,35 @@ const props = defineProps<{
       color: white;
     }
   }
+
+  .newQuestionTile__header {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .header_right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .time_input {
+    width: 48px;
+    text-align: center;
+  }
+
+  .remove_button {
+     background-color: white;
+     border-radius: 5px;
+     width: 48px;
+     height: 48px;
+     border: none;
+     cursor: pointer;
+     user-select: none;
+   }
+
+
 
 }
 
