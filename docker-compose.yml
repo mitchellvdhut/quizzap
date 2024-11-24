@@ -11,6 +11,7 @@ services:
       - ./html:/usr/share/nginx/html
     depends_on:
       - backend
+    restart: always
     networks:
       - quizzap
 

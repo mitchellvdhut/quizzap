@@ -4,9 +4,13 @@ from fastapi import APIRouter
 
 from api.home.v1.home import home_v1_router
 from api.quiz.v1.quiz import quiz_v1_router
+from api.quiz.v1.question import question_v1_router
 from api.user.v1.user import user_v1_router
 from api.auth.v1.auth import auth_v1_router
 from api.me.v1.me import me_v1_router
+
+
+quiz_v1_router.include_router(question_v1_router, prefix="/{quiz_id}/questions", tags=["Questions"])
 
 
 router = APIRouter()

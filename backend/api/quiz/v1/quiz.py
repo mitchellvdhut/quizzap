@@ -7,6 +7,7 @@ from app.quiz.dependencies.quiz import get_path_quiz_id
 from app.quiz.schemas.quiz import CreateQuizSchema, QuizSchema
 from app.quiz.services.quiz import QuizService
 from app.quiz.schemas.quiz import UpdateQuizSchema
+from app.user.dependencies.user import get_current_user
 from core.fastapi.dependencies.database import get_db
 from core.fastapi.dependencies.permission import (
     PermissionDependency,
@@ -14,6 +15,8 @@ from core.fastapi.dependencies.permission import (
     IsAuthenticated,
     IsAdmin,
     IsQuizOwner,
+    AND,
+    OR,
 )
 from core.versioning import version
 
@@ -24,7 +27,7 @@ quiz_v1_router = APIRouter()
 @quiz_v1_router.get(
     "",
     response_model=list[QuizSchema],
-    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+    dependencies=[Depends(PermissionDependency(IsAuthenticated))],
 )
 @version(1)
 async def get_quizzes(session: Session = Depends(get_db)):
@@ -34,7 +37,7 @@ async def get_quizzes(session: Session = Depends(get_db)):
 @quiz_v1_router.get(
     "/{quiz_id}",
     response_model=QuizSchema,
-    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+    dependencies=[Depends(PermissionDependency(IsAuthenticated))],
 )
 @version(1)
 async def get_quiz(
@@ -48,14 +51,15 @@ async def get_quiz(
     "",
     response_model=QuizSchema,
     status_code=201,
-    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+    dependencies=[Depends(PermissionDependency(IsAuthenticated))],
 )
 @version(1)
 async def create_quiz(
     schema: CreateQuizSchema,
     session: Session = Depends(get_db),
+    current_user: int = Depends(get_current_user)
 ):
-    return await QuizService(session).create_quiz(schema)
+    return await QuizService(session).create_quiz(schema, current_user)
 
 
 @quiz_v1_router.patch(
@@ -63,7 +67,7 @@ async def create_quiz(
     response_model=QuizSchema,
     status_code=200,
     dependencies=[
-        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsQuizOwner]]))
+        Depends(PermissionDependency(IsAdmin, OR, (IsAuthenticated, AND, IsQuizOwner)))
     ],
 )
 @version(1)
@@ -79,7 +83,7 @@ async def update_quiz(
     "/{quiz_id}",
     status_code=204,
     dependencies=[
-        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsQuizOwner]]))
+        Depends(PermissionDependency(IsAdmin, OR, (IsAuthenticated, AND, IsQuizOwner)))
     ],
 )
 @version(1)

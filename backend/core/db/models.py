@@ -18,7 +18,9 @@ class User(Base, TimestampMixin):
     username: Mapped[str] = mapped_column(Text, nullable=False)
     password: Mapped[str] = mapped_column(Text, nullable=False)
     is_admin: Mapped[bool] = mapped_column(default=False)
-
+    quizzes: Mapped[list["Quiz"]] = relationship(
+        back_populates="creator", cascade="all, delete"
+    )
 
     def __repr__(self) -> str:
         return f"User('{self.username}')"
@@ -30,6 +32,9 @@ class Quiz(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    created_by: Mapped[int] = mapped_column(ForeignKey("user.id"))
+
+    creator: Mapped[User] = relationship(back_populates="quizzes")
 
     questions: Mapped[list["Question"]] = relationship(
         back_populates="quiz", cascade="all, delete"

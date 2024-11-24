@@ -4,11 +4,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.user.dependencies.user import get_path_user_id
 
-from app.user.schemas.user import CreateUserSchema, UserSchema
+from app.user.schemas.user import CreateUserSchema, FullUserSchema
 from app.user.services.user import UserService
 from app.user.schemas.user import UpdateUserSchema
 from core.fastapi.dependencies.database import get_db
 from core.fastapi.dependencies.permission import (
+    AND,
+    OR,
     PermissionDependency,
     AllowAll,
     IsAuthenticated,
@@ -23,7 +25,7 @@ user_v1_router = APIRouter()
 
 @user_v1_router.get(
     "",
-    response_model=list[UserSchema],
+    response_model=list[FullUserSchema],
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
@@ -33,8 +35,8 @@ async def get_users(session: Session = Depends(get_db)):
 
 @user_v1_router.get(
     "/{user_id}",
-    response_model=UserSchema,
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsUserOwner]]))],
+    response_model=FullUserSchema,
+    dependencies=[Depends(PermissionDependency(IsAdmin, OR, (IsAuthenticated, AND, IsUserOwner)))],
 )
 @version(1)
 async def get_user(user_id: str = Depends(get_path_user_id), session: Session = Depends(get_db)):
@@ -43,7 +45,7 @@ async def get_user(user_id: str = Depends(get_path_user_id), session: Session = 
 
 @user_v1_router.post(
     "",
-    response_model=UserSchema,
+    response_model=FullUserSchema,
     status_code=201,
     dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
@@ -54,7 +56,7 @@ async def create_user(schema: CreateUserSchema, session: Session = Depends(get_d
 
 @user_v1_router.patch(
     "/{user_id}",
-    response_model=UserSchema,
+    response_model=FullUserSchema,
     status_code=200,
     dependencies=[
         Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsUserOwner]]))
