@@ -1,6 +1,6 @@
 services:
   backend:
-    container_name: fastapi_template_backend
+    container_name: quizzap_backend
     env_file:
       - .env
     build:
@@ -11,42 +11,32 @@ services:
     restart: always
     command: bash -c "alembic upgrade head && python main.py --env dev"
     ports:
-      - 8001:8001
+      - 8000:8000
     depends_on:
       - database
     networks:
-      - fastapi-template
-  
-  database:
-    container_name: fastapi_template_database
-    image: mysql:latest
-    env_file:
-      - .env
-    ports:  
-      - 3306:3306
+      - quizzap
     volumes:
-      - fastapi_template_database:/var/lib/mysql
-    networks:
-      - fastapi-template
+      - quizzap_data:/app/data # Ensure SQLite database file is shared via a volume
 
-  phpmyadmin:
-    container_name: fastapi_template_phpmyadmin
-    image: phpmyadmin
-    env_file:
-      - .env
-    depends_on:
-      - database
+  phpliteadmin:
+    image: linuxserver/phpliteadmin
+    container_name: phpliteadmin
     ports:
-      - 8081:80
+      - "8080:80"
     environment:
-      PMA_HOST: fastapi_template_database
-      PMA_PORT: 3306
-    restart: always
+      - PUID=1000          # Replace with your user ID
+      - PGID=1000          # Replace with your group ID
+      - TZ=Etc/UTC         # Replace with your timezone
+      - PASSWORD=root
+    volumes:
+      - quizzap_data:/config/db # Point phpLiteAdmin to the shared volume
+    restart: unless-stopped
     networks:
-      - fastapi-template
+      - quizzap
 
 networks:
-  fastapi-template:
+  quizzap:
 
 volumes:
-  fastapi_template_database:
+  quizzap_data:
