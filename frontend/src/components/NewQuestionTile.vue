@@ -106,8 +106,8 @@ const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) 
 }
 
 @for $i from 1 through 4 {
-  .answer-field {
-    &:nth-child(3n + #{$i}) {
+  .answer:nth-child(3n + #{$i}) {
+    .answer-field {
       $field-color: map.get($tile-colors, $i);
       $field-shadow-color: color.adjust($field-color, $lightness: -15%);
       $field-background-color: color.adjust($field-color, $lightness: 30%);
