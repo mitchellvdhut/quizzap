@@ -13,7 +13,7 @@ class Config:
     ENV: str = "development"
     DEBUG: bool = True
     APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8001
+    APP_PORT: int = 8000
 
     _db_dialect_and_driver = "mysql+mysqldb"
     DB_URL: str = "{}://{}:{}@{}:{}/{}".format(
@@ -21,7 +21,7 @@ class Config:
         os.getenv("DB_USER"),
         os.getenv("MYSQL_ROOT_PASSWORD"),
         os.getenv("DB_LOCAL_HOST"),
-        os.getenv("DB_PORT"),
+        os.getenv("DB_LOCAL_PORT"),
         os.getenv("MYSQL_DATABASE"),
     )
     
@@ -45,7 +45,7 @@ class DevelopmentConfig(Config):
         os.getenv("DB_USER"),
         os.getenv("MYSQL_ROOT_PASSWORD"),
         os.getenv("DB_DOCKER_HOST"),
-        os.getenv("DB_PORT"),
+        os.getenv("DB_DOCKER_PORT"),
         os.getenv("MYSQL_DATABASE"),
     )
 
