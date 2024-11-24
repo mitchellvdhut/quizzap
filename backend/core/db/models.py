@@ -2,9 +2,11 @@
 
 
 from sqlalchemy import (
+    Boolean,
+    ForeignKey,
     Text,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.db import Base
 from core.db.mixins import TimestampMixin
 
@@ -20,3 +22,40 @@ class User(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"User('{self.username}')"
+
+
+class Quiz(Base, TimestampMixin):
+    __tablename__ = "quiz"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+    questions: Mapped[list["Question"]] = relationship(
+        back_populates="quiz", cascade="all, delete"
+    )
+
+
+class Question(Base, TimestampMixin):
+    __tablename__ = "question"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    quiz_id: Mapped[int] = mapped_column(ForeignKey("quiz.id"))
+
+    quiz: Mapped[Quiz] = relationship(back_populates="questions")
+    answers: Mapped[list["Answer"]] = relationship(
+        back_populates="question", cascade="all, delete"
+    )
+
+
+class Answer(Base, TimestampMixin):
+    __tablename__ = "answer"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    is_correct: Mapped[bool] = mapped_column(Boolean, default=False)
+    question_id: Mapped[int] = mapped_column(ForeignKey("question.id"))
+
+    question: Mapped[Question] = relationship(back_populates="answers")
