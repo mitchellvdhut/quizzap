@@ -39,7 +39,7 @@ async def get_users(session: Session = Depends(get_db)):
     dependencies=[Depends(PermissionDependency(IsAdmin, OR, (IsAuthenticated, AND, IsUserOwner)))],
 )
 @version(1)
-async def get_user(user_id: str = Depends(get_path_user_id), session: Session = Depends(get_db)):
+async def get_user(user_id: int = Depends(get_path_user_id), session: Session = Depends(get_db)):
     return await UserService(session).get_user(user_id)
 
 
@@ -64,7 +64,7 @@ async def create_user(schema: CreateUserSchema, session: Session = Depends(get_d
 )
 @version(1)
 async def update_user(
-    schema: UpdateUserSchema, user_id: str = Depends(get_path_user_id), session: Session = Depends(get_db)
+    schema: UpdateUserSchema, user_id: int = Depends(get_path_user_id), session: Session = Depends(get_db)
 ):
     return await UserService(session).update_user(user_id, schema)
 
@@ -77,5 +77,5 @@ async def update_user(
     ],
 )
 @version(1)
-async def delete_user(user_id: str = Depends(get_path_user_id), session: Session = Depends(get_db)):
+async def delete_user(user_id: int = Depends(get_path_user_id), session: Session = Depends(get_db)):
     return await UserService(session).delete_user(user_id)

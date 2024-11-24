@@ -1,14 +1,22 @@
 from datetime import datetime
 from pydantic import ConfigDict, BaseModel
 
-from app.question.schemas.question import QuestionSchema
+from app.question.schemas.question import QuestionSchema, UploadQuestionSchema
 from app.user.schemas.user import UserSchema
-from core.schemas.hashids import HashId
+from core.schemas.hashids import DehashId, HashId
 
 
 class CreateQuizSchema(BaseModel):
     name: str
     description: str
+
+
+class UploadQuizSchema(BaseModel):
+    id: DehashId | None = None
+    name: str
+    description: str
+
+    questions: list[UploadQuestionSchema]
 
 
 class QuizSchema(BaseModel):

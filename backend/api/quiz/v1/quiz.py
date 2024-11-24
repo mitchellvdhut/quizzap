@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.quiz.dependencies.quiz import get_path_quiz_id
 
-from app.quiz.schemas.quiz import CreateQuizSchema, QuizSchema
+from app.quiz.schemas.quiz import CreateQuizSchema, QuizSchema, UploadQuizSchema
 from app.quiz.services.quiz import QuizService
 from app.quiz.schemas.quiz import UpdateQuizSchema
 from app.user.dependencies.user import get_current_user
@@ -24,6 +24,27 @@ from core.versioning import version
 quiz_v1_router = APIRouter()
 
 
+@quiz_v1_router.put(
+    "",
+    response_model=QuizSchema,
+    dependencies=[Depends(PermissionDependency(IsAuthenticated))],
+)
+@version(1)
+async def upload_quiz(
+    schema: UploadQuizSchema,
+    session: Session = Depends(get_db),
+    current_user: int = Depends(get_current_user),
+):
+    """
+    When uploading a quiz for the first time (and quiz has a unique name), you will not have an ID.
+    You will be returned a new unique ID.
+
+    Next time when uploading, include this given ID.
+    Otherwise we will throw a duplicate name error, as the names were the same but the ID's were not (None != id)
+    """
+    return await QuizService(session).upload_quiz(schema, current_user)
+
+
 @quiz_v1_router.get(
     "",
     response_model=list[QuizSchema],
@@ -41,7 +62,7 @@ async def get_quizzes(session: Session = Depends(get_db)):
 )
 @version(1)
 async def get_quiz(
-    quiz_id: str = Depends(get_path_quiz_id),
+    quiz_id: int = Depends(get_path_quiz_id),
     session: Session = Depends(get_db),
 ):
     return await QuizService(session).get_quiz(quiz_id)
@@ -57,7 +78,7 @@ async def get_quiz(
 async def create_quiz(
     schema: CreateQuizSchema,
     session: Session = Depends(get_db),
-    current_user: int = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ):
     return await QuizService(session).create_quiz(schema, current_user)
 
@@ -73,7 +94,7 @@ async def create_quiz(
 @version(1)
 async def update_quiz(
     schema: UpdateQuizSchema,
-    quiz_id: str = Depends(get_path_quiz_id),
+    quiz_id: int = Depends(get_path_quiz_id),
     session: Session = Depends(get_db),
 ):
     return await QuizService(session).update_quiz(quiz_id, schema)
@@ -88,7 +109,7 @@ async def update_quiz(
 )
 @version(1)
 async def delete_quiz(
-    quiz_id: str = Depends(get_path_quiz_id),
+    quiz_id: int = Depends(get_path_quiz_id),
     session: Session = Depends(get_db),
 ):
     return await QuizService(session).delete_quiz(quiz_id)

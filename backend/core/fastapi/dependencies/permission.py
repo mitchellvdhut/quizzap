@@ -121,7 +121,7 @@ class PermissionDependency(SecurityBase):
         has_permission = False
 
         for perm in perms:
-            if isinstance(perm, list):
+            if isinstance(perm, list) or isinstance(perm, tuple):
                 if skip_until_or:
                     continue
 
@@ -163,7 +163,7 @@ class PermissionDependency(SecurityBase):
     @staticmethod
     async def is_valid_perms(perms: PermList) -> bool:
         for index, perm in enumerate(perms):
-            if isinstance(perm, list):
+            if isinstance(perm, list) or isinstance(perm, tuple):
                 if not await PermissionDependency.is_valid_perms(perm):
                     return False
                 continue
