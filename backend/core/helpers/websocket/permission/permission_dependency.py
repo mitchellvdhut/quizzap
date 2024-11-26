@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Type, Union
+from typing import Type, Union
 
 from core.fastapi.dependencies.permission.permission_dependency import PermissionDependency
 from core.fastapi.dependencies.permission.keyword import Keyword
@@ -12,7 +12,8 @@ class BaseWebsocketPermission(ABC):
         del pool_id
 
 
-PermList = List[Union[Type[BaseWebsocketPermission], Type[Keyword], List]]
+PermItem = Union[Type[BaseWebsocketPermission], Type[Keyword], tuple, list]
+PermList = Union[tuple[PermItem], list[PermItem]]
 
 
 class WebsocketPermission(PermissionDependency):

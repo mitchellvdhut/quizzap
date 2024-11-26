@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import logging
-from typing import List, Type, Union
+from typing import Type, Union
 from fastapi import Depends, Request
 from fastapi.security.base import SecurityBase
 from fastapi.openapi.models import APIKey, APIKeyIn
@@ -17,7 +17,8 @@ class BasePermission(ABC):
         del request
 
 
-PermList = List[Union[Type[BasePermission], Type[Keyword], List]]
+PermItem = Union[Type[BasePermission], Type[Keyword], tuple, list]
+PermList = Union[tuple[PermItem], list[PermItem]]
 
 
 class PermissionDependency(SecurityBase):

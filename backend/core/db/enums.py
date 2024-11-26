@@ -10,7 +10,7 @@ class UserEnum(BaseEnum):
 
 
 class WebsocketActionEnum(str, BaseEnum):
-    SESSION_CODE = "SESSION_CODE"       # Send a HTTP like status code
+    STATUS_CODE = "STATUS_CODE"         # Send a HTTP like status code
     POOL_MESSAGE = "POOL_MESSAGE"       # Send a simple message to all in pool
     GLOBAL_MESSAGE = "GLOBAL_MESSAGE"   # Send a simple message to all connected
     USER_CONNECT = "USER_CONNECT"       # New user has connected

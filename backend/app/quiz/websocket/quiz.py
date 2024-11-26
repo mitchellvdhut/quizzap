@@ -4,10 +4,10 @@
 import logging
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from starlette.websockets import WebSocketState
+from core.helpers.websocket.base import BaseWebsocketService
 from core.db.enums import WebsocketActionEnum
 from core.exceptions.base import CustomException
 from core.exceptions.websocket import (
-    ActionNotImplementedException,
     SuccessfullConnection,
 )
 from core.helpers.logger import get_logger
@@ -16,7 +16,7 @@ from core.helpers.websocket.manager import WebSocketConnectionManager
 from pydantic.main import ModelMetaclass
 
 
-class BaseWebsocketService:
+class QuizWebsocketService(BaseWebsocketService):
     def __init__(
         self,
         manager: WebSocketConnectionManager,
@@ -99,71 +99,3 @@ class BaseWebsocketService:
             logging.info(self.active_pools.get(pool_id))
             logging.exception(exc)
             print(exc)
-
-    async def handle_action_not_implemented(
-        self,
-        websocket: WebSocket,
-        **kwargs,
-    ):
-        """Handle an action packet that has not been implemented.
-
-        Args:
-            websocket (WebSocket): The websocket connection.
-
-        Returns:
-            None.
-        """
-        del kwargs
-
-        await self.manager.handle_connection_code(
-            websocket,
-            ActionNotImplementedException,
-        )
-
-    async def handle_global_message(
-        self,
-        packet: WebsocketPacketSchema,
-        websocket: WebSocket,
-        **kwargs,
-    ):
-        """Handle a global message sent by an admin user to all participants of a
-        swipe session.
-
-        Args:
-            packet (SwipeSessionPacketSchema): WebsocketPacket sent by client.
-            websocket (WebSocket): The websocket connection.
-
-        Returns:
-            None.
-        """
-        del kwargs
-
-        await self.manager.handle_global_message(
-            websocket,
-            packet.payload.get("message"),
-        )
-
-    async def handle_pool_message(
-        self,
-        pool_id: int,
-        packet: WebsocketPacketSchema,
-        websocket: WebSocket,
-        **kwargs,
-    ):
-        """Handle a message sent by a participant of a pool to the entire pool.
-
-        Args:
-            pool_id (int): Identifier for the pool to send the message to.
-            packet (SwipeSessionPacketSchema): WebsocketPacket sent by client.
-            websocket (WebSocket): The websocket connection.
-
-        Returns:
-            None.
-        """
-        del kwargs
-
-        await self.manager.handle_pool_message(
-            websocket,
-            pool_id,
-            packet.payload.get("message"),
-        )
