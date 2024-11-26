@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 from core.db.models import User
 from core.exceptions.base import CustomException
-from core.fastapi.dependencies.permission import BasePermission
+from core.fastapi.dependencies.permission.permissions import BasePermission
 from core.helpers.hashids import encode
 
 from core.helpers.token import token_checker
