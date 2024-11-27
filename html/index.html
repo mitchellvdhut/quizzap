@@ -1,15 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="0;url=https://localhost/api/latest/docs" />
-  <title>Document</title>
+  <title>Chat</title>
+  <style>
+    input {
+      width: 50%;
+    }
+    .inputs {
+      display: grid;
+      grid-template-columns: 7rem 1fr;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>hello world</h1>
+  <h1>WebSocket Testing</h1>
+  <div>
+    <div>
+      <h2>Connect</h2>
+      <div class="inputs">
+        <span>Session ID: </span><input type="text" id="itemId" autocomplete="off" value="foo" />
+        <span>Token: </span><input type="text" id="token" autocomplete="off" value="?token=bar" />
+      </div>
+      <button onclick="connect(event)">Connect</button>
+    </div>
+    <hr>
+    <div>
+      <h2>Send message</h2>
+      <div class="inputs">
+        <span>Message: </span><input type="text" id="messageText" autocomplete="off" />
+      </div>
+      <button onclick="sendMessage(event)">Send</button>
+    </div>
+    <hr>
+    <!-- <label>Recipe ID: <input type="text" id="recipeId" autocomplete="off" /></label><br>
+    <label>Like: <input type="checkbox" id="recipeLike"></label><br> -->
+    <button onclick="swipeMeal(event)">Send</button>
+  </div>
+  <ul id='messages'></ul>
+  <script>
+    const actions = {
+      STATUS_CODE: "STATUS_CODE",
+      POOL_MESSAGE: "POOL_MESSAGE",
+      GLOBAL_MESSAGE: "GLOBAL_MESSAGE",
+      USER_CONNECT: "USER_CONNECT",
+      USER_DISCONNECT: "USER_DISCONNECT",
+      SESSION_CLOSE: "SESSION_CLOSE",
+      SUBMIT_VOTE: "SUBMIT_VOTE",
+      QUESTION_START: "QUESTION_START",
+      QUESTION_STOP: "QUESTION_STOP",
+    }
+    var ws = null;
+
+    function connect(event) {
+      var sessionId = document.getElementById("itemId").value
+      var token = document.getElementById("token").value
+      // ws = new WebSocket("wss://munchie.azurewebsites.net/api/latest/swipe_sessions/" + itemId.value + token.value);
+      ws = new WebSocket("wws://localhost/api/latest/quizzes/websocket" + sessionId + token);
+      ws.onmessage = function (event) {
+        var messages = document.getElementById('messages')
+        var message = document.createElement('li')
+        var content = document.createTextNode(event.data)
+        message.appendChild(content)
+        messages.appendChild(message)
+      };
+      event.preventDefault()
+    }
+
+    function sendMessage(event) {
+      var input = document.getElementById("messageText")
+      ws.send(input.value)
+      input.value = ''
+      event.preventDefault()
+    }
+
+    function swipeMeal(event) {
+      var input = document.getElementById("recipeId")
+      var input_2 = document.getElementById("recipeLike")
+      var packet = {
+        action: actions.RECIPE_SWIPE,
+        payload: {
+          recipe_id: parseInt(input.value),
+          like: input_2.checked
+        }
+      }
+      console.log(JSON.stringify(packet))
+      ws.send(JSON.stringify(packet))
+      input.value = ''
+      event.preventDefault()
+    }
+  </script>
 </body>
 
 </html>

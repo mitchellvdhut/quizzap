@@ -5,8 +5,8 @@ Permission class to approve and refuse access on websockets.
 
 from typing import Annotated
 from fastapi import Cookie, Query, WebSocketException, status
-from backend.core.helpers.token.token_helper import TokenHelper
-from backend.core.helpers.websocket.permission.permission_dependency import BaseWebsocketPermission
+from core.helpers.token.token_helper import TokenHelper
+from core.helpers.websocket.permission.permission_dependency import BaseWebsocketPermission
 
 from core.exceptions.base import CustomException
 
