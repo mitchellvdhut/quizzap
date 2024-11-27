@@ -1,19 +1,19 @@
 <template>
-  <div class="newQuestionTile">
+  <div class="quizTile">
     <div class="newQuestionTile__header">
       <p>Vraag:</p>
       <div class="header_right">
         Tijd:
-        <input class="time_input" type="number" :value="question.answeringTimeInSeconds">
-        <button class="remove_button" @click="() => onRemove(index)">DELETE</button>
+        <input class="time_input" type="number" v-model="question.answeringTimeInSeconds">
+        <button class="remove_button" @click="() => onRemove(index)"><span><img src="/icons/trash_24px.png" alt="trash"></span></button>
       </div>
     </div>
-    <input v-model="question.question" placeholder="Vul hier je vraag in" />
+    <input type="text" v-model="question.question" placeholder="Vul hier je vraag in" />
     <p>Antwoorden:</p>
     <div class="answers-list">
       <div class="answer" v-for="(answer, j) in question.answers" >
         <input type="checkbox" v-model="correctAnswers" :value="j">
-        <input class="answer-field" v-model="question.answers[j].text" :placeholder="`Antwoord ${j}`" />
+        <input class="answer-field" v-model="question.answers[j].text" :placeholder="`Antwoord ${j + 1}`" />
       </div>
     </div>
   </div>
@@ -33,7 +33,7 @@ const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) 
 </script>
 
 <style lang="scss" scoped>
-.newQuestionTile {
+.quizTile {
   width: 100%;
   min-height: 150px;
   background-color: #29296c;
@@ -44,7 +44,7 @@ const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) 
   color: white;
   gap: 1rem;
 
-  input {
+  .answer-field {
     width: calc(100% - 0.5rem);
     height: 40px;
     box-sizing: border-box;
@@ -62,11 +62,22 @@ const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) 
     &::-ms-input-placeholder { /* Edge 12 -18 */
       color: white;
     }
+
+  }
+  input[type=checkbox] {
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
   }
 
   .newQuestionTile__header {
     display: flex;
     justify-content: space-between;
+  }
+  input[type=text] {
+    height: 40px;
+    border-radius: 5px;
+    padding: 0 0.5rem;
   }
 
   .header_right {
@@ -77,7 +88,8 @@ const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) 
   }
 
   .time_input {
-    width: 48px;
+    width: 40px;
+    height: 40px;
     text-align: center;
   }
 
@@ -89,10 +101,12 @@ const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) 
      border: none;
      cursor: pointer;
      user-select: none;
+
+    img {
+      width: 24px;
+      height: 24px;
+    }
    }
-
-
-
 }
 
 .answers-list {
@@ -103,6 +117,13 @@ const correctAnswers = ref<number[]>(props.question.answers.map((answer, index) 
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+}
+.answer {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex-grow: 1;
+  width: 100%;
 }
 
 @for $i from 1 through 4 {

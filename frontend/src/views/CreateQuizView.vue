@@ -1,13 +1,13 @@
 <template>
   <div class="create">
-    <h1>create quiz view</h1>
+    <h1>Nieuwe quiz maken</h1>
     <NewQuestionTile
       v-for="(question, index) in questions"
       :index="index"
       :question="question"
       :on-remove="removeQuestion"
     />
-    <button class="add-question-button" @click="addQuestion">+ Nieuwe vraag toevoegen</button>
+    <button class="add-quiz-button" @click="addQuestion">+ Nieuwe vraag toevoegen</button>
   </div>
 </template>
 
@@ -88,7 +88,7 @@ function removeQuestion(index: number) {
 }
 
 
-.add-question-button {
+.add-quiz-button {
   width: 100%;
   height: 48px;
   border-radius: 15px;
