@@ -1,5 +1,5 @@
 from typing import TypedDict
-from backend.core.helpers.websocket.websocket import WebSocketConnection
+from core.helpers.websocket.websocket import WebSocketConnection
 
 
 class ClientConnection(TypedDict):

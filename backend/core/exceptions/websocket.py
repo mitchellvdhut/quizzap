@@ -1,7 +1,7 @@
-from core.exceptions import CustomException
+from core.exceptions.base import CustomException
 
 
-class Connectionstatus_code:
+class ConnectionCode:
     status_code = 200
     message = "connection status_code"
 
@@ -10,12 +10,12 @@ class Connectionstatus_code:
         self.message = message
 
 
-class SuccessfullConnection(Connectionstatus_code):
+class SuccessfullConnection(ConnectionCode):
     status_code = 202
     message = "you have connected"
 
 
-class ClosingConnection(Connectionstatus_code):
+class ClosingConnection(ConnectionCode):
     status_code = 200
     message = "you have been forcefully disconnected"
 
