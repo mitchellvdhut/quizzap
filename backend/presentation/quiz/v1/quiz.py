@@ -9,15 +9,9 @@ from app.quiz.services.quiz import QuizService
 from app.quiz.schemas.quiz import UpdateQuizSchema
 from app.user.dependencies.user import get_current_user
 from core.fastapi.dependencies.database import get_db
-from core.fastapi.dependencies.permission import (
-    PermissionDependency,
-    # AllowAll,
-    IsAuthenticated,
-    IsAdmin,
-    IsQuizOwner,
-    AND,
-    OR,
-)
+from core.fastapi.dependencies.permission.keyword import AND, OR
+from core.fastapi.dependencies.permission.permissions import IsAdmin, IsAuthenticated, IsQuizOwner
+from core.fastapi.dependencies.permission.permission_dependency import PermissionDependency
 from core.versioning import version
 
 

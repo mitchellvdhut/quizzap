@@ -14,7 +14,6 @@ def seed_db():
             )
         
             session.add(admin)
-            session.refresh(admin)
         
         quiz = session.query(Quiz).where(Quiz.name == "The Greg quiz!").first()
         if not quiz:

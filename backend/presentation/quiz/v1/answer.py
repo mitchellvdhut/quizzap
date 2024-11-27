@@ -8,16 +8,10 @@ from app.answer.services.answer import AnswerService
 from app.answer.dependencies.answer import get_path_answer_id
 from app.question.dependencies.question import get_path_question_id
 from app.quiz.dependencies.quiz import get_path_quiz_id
+from core.fastapi.dependencies.permission.keyword import AND, OR
+from core.fastapi.dependencies.permission.permissions import IsAdmin, IsAuthenticated, IsQuizOwner
+from core.fastapi.dependencies.permission.permission_dependency import PermissionDependency
 from core.fastapi.dependencies.database import get_db
-from core.fastapi.dependencies.permission import (
-    PermissionDependency,
-    # AllowAll,
-    IsAuthenticated,
-    IsAdmin,
-    IsQuizOwner,
-    AND,
-    OR,
-)
 from core.versioning import version
 
 

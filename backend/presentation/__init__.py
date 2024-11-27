@@ -2,17 +2,20 @@
 
 from fastapi import APIRouter
 
-from api.home.v1.home import home_v1_router
-from api.quiz.v1.quiz import quiz_v1_router
-from api.quiz.v1.question import question_v1_router
-from api.quiz.v1.answer import answer_v1_router
-from api.user.v1.user import user_v1_router
-from api.auth.v1.auth import auth_v1_router
-from api.me.v1.me import me_v1_router
+from presentation.home.v1.home import home_v1_router
+from presentation.quiz.v1.quiz import quiz_v1_router
+from presentation.quiz.v1.question import question_v1_router
+from presentation.quiz.v1.answer import answer_v1_router
+from presentation.quiz.v1.websocket import quiz_websocket_router
+from presentation.user.v1.user import user_v1_router
+from presentation.auth.v1.auth import auth_v1_router
+from presentation.me.v1.me import me_v1_router
 
 
 question_v1_router.include_router(answer_v1_router, prefix="/{question_id}/answers", tags=["Answers"])
 quiz_v1_router.include_router(question_v1_router, prefix="/{quiz_id}/questions", tags=["Questions"])
+
+quiz_v1_router.include_router(quiz_websocket_router, prefix="/websocket")
 
 
 router = APIRouter()

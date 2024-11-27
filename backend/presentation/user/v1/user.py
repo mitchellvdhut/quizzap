@@ -8,15 +8,9 @@ from app.user.schemas.user import CreateUserSchema, FullUserSchema
 from app.user.services.user import UserService
 from app.user.schemas.user import UpdateUserSchema
 from core.fastapi.dependencies.database import get_db
-from core.fastapi.dependencies.permission import (
-    AND,
-    OR,
-    PermissionDependency,
-    AllowAll,
-    IsAuthenticated,
-    IsAdmin,
-    IsUserOwner,
-)
+from core.fastapi.dependencies.permission.keyword import AND, OR
+from core.fastapi.dependencies.permission.permissions import IsAdmin, IsAuthenticated, AllowAll, IsUserOwner
+from core.fastapi.dependencies.permission.permission_dependency import PermissionDependency
 from core.versioning import version
 
 
