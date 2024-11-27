@@ -2,6 +2,7 @@
 """
 
 import logging
+from typing import Type
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from starlette.websockets import WebSocketState
 from core.db.enums import WebsocketActionEnum
@@ -11,16 +12,15 @@ from core.exceptions.websocket import (
     SuccessfullConnection,
 )
 from core.helpers.logger import get_logger
-from core.helpers.websocket.schemas.packet import WebsocketPacketSchema
+from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
 from core.helpers.websocket.manager import WebSocketConnectionManager
-from pydantic.main import ModelMetaclass
 
 
 class BaseWebsocketService:
     def __init__(
         self,
         manager: WebSocketConnectionManager,
-        schema: ModelMetaclass = WebsocketPacketSchema,
+        schema: Type[BaseWebsocketPacketSchema] = BaseWebsocketPacketSchema,
         actions: dict = None,
     ) -> None:
         self.manager = manager
@@ -122,7 +122,7 @@ class BaseWebsocketService:
 
     async def handle_global_message(
         self,
-        packet: WebsocketPacketSchema,
+        packet: BaseWebsocketPacketSchema,
         websocket: WebSocket,
         **kwargs,
     ):
@@ -146,7 +146,7 @@ class BaseWebsocketService:
     async def handle_pool_message(
         self,
         pool_id: int,
-        packet: WebsocketPacketSchema,
+        packet: BaseWebsocketPacketSchema,
         websocket: WebSocket,
         **kwargs,
     ):
