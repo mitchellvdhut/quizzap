@@ -1,7 +1,8 @@
 """Home endpoints."""
 
 from fastapi import APIRouter, Depends, Response
-from core.fastapi.dependencies.permission import AllowAll, PermissionDependency
+from core.fastapi.dependencies.permission.permission_dependency import PermissionDependency
+from core.fastapi.dependencies.permission.permissions import AllowAll
 from core.versioning import version
 
 

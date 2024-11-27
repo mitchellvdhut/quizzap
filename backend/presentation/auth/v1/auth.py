@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app.auth.schemas.jwt import RefreshTokenSchema, TokensSchema
 from app.auth.services.auth import AuthService
 from app.auth.schemas.auth import LoginSchema
-from core.fastapi.dependencies.permission import AllowAll, PermissionDependency
+from core.fastapi.dependencies.permission.permission_dependency import PermissionDependency
+from core.fastapi.dependencies.permission.permissions import AllowAll
 from core.fastapi.dependencies.database import get_db
 from core.versioning import version
 

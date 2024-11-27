@@ -5,10 +5,8 @@ from app.user.dependencies.user import get_current_user
 from app.user.services.user import UserService
 from app.user.schemas.user import FullUserSchema, UpdateUserSchema
 from core.fastapi.dependencies.database import get_db
-from core.fastapi.dependencies.permission import (
-    IsAuthenticated,
-    PermissionDependency,
-)
+from core.fastapi.dependencies.permission.permission_dependency import PermissionDependency
+from core.fastapi.dependencies.permission.permissions import IsAuthenticated
 from core.versioning import version
 
 

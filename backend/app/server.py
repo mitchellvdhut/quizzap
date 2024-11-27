@@ -7,7 +7,7 @@ from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api import router
+from presentation import router
 from app.seed_db import seed_db
 from core.config import config
 from core.exceptions.base import CustomException
