@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+<<<<<<< Updated upstream
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="0;url=https://localhost/api/latest/docs" />
@@ -10,6 +11,180 @@
 
 <body>
   <h1>hello world</h1>
+=======
+  <title>Chat</title>
+  <style>
+    input {
+      width: 50%;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: 7rem 1fr;
+    }
+
+    .copy {
+      cursor: pointer;
+      border-radius: .3rem;
+      padding: .2rem .3rem;
+    }
+    .copy:hover {
+      background-color: #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>WebSocket Testing</h1>
+  <div>
+    <div>
+      <h2>Create session</h2>
+      <span><b>Quiz Ids:</b><span id="quiz_ids"></span></span><br><br>
+      <div class="inputs">
+        <span>Quiz ID: </span><input type="text" id="quizId_create" autocomplete="off" />
+        <span>Token: </span><input type="text" id="token_create" autocomplete="off" />
+      </div>
+      <button onclick="createSession(event)">Connect</button>
+    </div>
+    <hr>
+    <div>
+      <h2>Connect to session</h2>
+      <div class="inputs">
+        <span>Quiz ID: </span><input type="text" id="quizId_join" autocomplete="off" />
+        <span>Session ID: </span><input type="text" id="sessionId_join" autocomplete="off" />
+      </div>
+      <button onclick="joinSession(event)">Connect</button>
+    </div>
+    <hr>
+    <div>
+      <h2>Send message</h2>
+      <div class="inputs">
+        <span>Message: </span><input type="text" id="messageText" autocomplete="off" />
+      </div>
+      <button onclick="sendMessage(event)">Send</button>
+    </div>
+    <hr>
+  </div>
+  <ul id='messages'></ul>
+  <script>
+    const actions = {
+      STATUS_CODE: "STATUS_CODE",
+      POOL_MESSAGE: "POOL_MESSAGE",
+      GLOBAL_MESSAGE: "GLOBAL_MESSAGE",
+      USER_CONNECT: "USER_CONNECT",
+      USER_DISCONNECT: "USER_DISCONNECT",
+      SESSION_CLOSE: "SESSION_CLOSE",
+      SUBMIT_VOTE: "SUBMIT_VOTE",
+      QUESTION_START: "QUESTION_START",
+      QUESTION_STOP: "QUESTION_STOP",
+    }
+    var ws = null;
+    var https = true;
+    var s = https ? "s" : "";
+
+    var baseUrl = "localhost";
+    var baseApi = "api/latest"
+
+    async function main() {
+      const bearerToken = await login();
+      if (!bearerToken) return;
+
+      await displayQuizIds(bearerToken);
+    }
+
+    async function login() {
+      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: "Admin",
+          password: "Admin"
+        }),
+      })
+
+      if (response.status == 401) {
+        alert('username: Admin; password: Admin; is not recognized.\nCannot prefill an access token or the quiz ids.')
+        return null;
+      }
+
+      const tokens = await response.json();
+      const bearerToken = `Bearer ${tokens.access_token}`;
+
+      document.getElementById("token_create").value = bearerToken;
+      // document.getElementById("token_join").value = bearerToken;
+
+      return bearerToken;
+    }
+
+    async function displayQuizIds(bearerToken) {
+      var quiz_ids = document.getElementById("quiz_ids");
+
+      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/quizzes`, {
+        headers: {
+          Authorization: bearerToken
+        },
+      })
+
+      if (response.status != 200) {
+        alert('Error retrieving quizzes');
+        return;
+      }
+
+      const quizData = await response.json();
+
+      quiz_ids.innerHTML = `${quizData.map(quiz => `
+        <span class="copy" onclick="navigator.clipboard.writeText('${quiz.id}');">${quiz.id}</span>
+      `)}`;
+
+      document.getElementById("quizId_create").value = quizData[0].id;
+      document.getElementById("quizId_join").value = quizData[0].id;
+    }
+
+    function createSession(e) {
+      e.preventDefault()
+
+      var quizId = document.getElementById("quizId_create").value
+      var token = document.getElementById("token_create").value
+
+      console.log(quizId, token)
+
+      ws = new WebSocket(`w${s}://${baseUrl}:8000/api/latest/quizzes/${quizId}/ws`);
+      // ws = new WebSocket("ws://localhost:8000/api/latest/ws")
+      ws.onmessage = function (event) {
+        var messages = document.getElementById('messages')
+        var message = document.createElement('li')
+        var content = document.createTextNode(event.data)
+        message.appendChild(content)
+        messages.appendChild(message)
+      };
+    }
+
+    function sendMessage(event) {
+      var input = document.getElementById("messageText")
+      ws.send(input.value)
+      input.value = ''
+      event.preventDefault()
+    }
+
+    function swipeMeal(event) {
+      var input = document.getElementById("recipeId")
+      var input_2 = document.getElementById("recipeLike")
+      var packet = {
+        action: actions.RECIPE_SWIPE,
+        payload: {
+          recipe_id: parseInt(input.value),
+          like: input_2.checked
+        }
+      }
+      console.log(JSON.stringify(packet))
+      ws.send(JSON.stringify(packet))
+      input.value = ''
+      event.preventDefault()
+    }
+
+    // main()
+  </script>
+>>>>>>> Stashed changes
 </body>
 
 </html>
