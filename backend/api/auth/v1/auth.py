@@ -17,7 +17,7 @@ auth_v1_router = APIRouter()
 @auth_v1_router.post(
     "/login",
     response_model=TokensSchema,
-    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+    dependencies=[Depends(PermissionDependency(AllowAll))],
 )
 @version(1)
 async def login(schema: LoginSchema, session: Session = Depends(get_db)):
@@ -27,7 +27,7 @@ async def login(schema: LoginSchema, session: Session = Depends(get_db)):
 @auth_v1_router.post(
     "/refresh",
     response_model=TokensSchema,
-    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+    dependencies=[Depends(PermissionDependency(AllowAll))],
 )
 @version(1)
 async def refresh(schema: RefreshTokenSchema, session: Session = Depends(get_db)):

@@ -9,10 +9,16 @@ class UserService:
     def __init__(self, session) -> None:
         self.repo = UserRepository(session)
 
-    async def get_by_username(self, username):
+    async def get_by_username(
+        self,
+        username,
+    ) -> User:
         return self.repo.get_by_username(username)
 
-    async def create_user(self, schema: CreateUserSchema):
+    async def create_user(
+        self,
+        schema: CreateUserSchema,
+    ) -> User:
         user = self.repo.get_by_username(schema.username)
 
         if user:
@@ -22,38 +28,47 @@ class UserService:
         user = User(username=schema.username, password=hashed_pass)
         return self.repo.create(user)
 
-    async def delete_user(self, user_id: int) -> None:
+    async def delete_user(
+        self,
+        user_id: int,
+    ) -> None:
         user = self.repo.get_by_id(user_id)
         if not user:
             raise UserNotFoundException
-        
+
         self.repo.delete(user)
 
-    async def update_user(self, user_id: int, schema: UpdateUserSchema):
+    async def update_user(
+        self,
+        user_id: int,
+        schema: UpdateUserSchema,
+    ) -> User:
         user = self.repo.get_by_id(user_id)
         if not user:
             raise UserNotFoundException
-        
+
         hashed_pass = get_password_hash(schema.password)
-        params = {"username": schema.username, "password": hashed_pass}
-        
+        params = {
+            "username": schema.username,
+            "password": hashed_pass,
+        }
+
         self.repo.update_by_id(user_id, params)
         return self.repo.get_by_id(user_id)
-    
-    async def get_user(self, user_id: int):
-        user = self.repo.get_by_id(user_id)
-        if not user:
-            raise UserNotFoundException
-        
-        return user
-    
-    async def get_users(self):
-        return self.repo.get()
-    
-    async def is_admin(self, user_id):
-        user = self.repo.get_by_id(user_id)
-        if not user:
-            raise UserNotFoundException
-        
-        return user.is_admin
 
+    async def get_user(self, user_id: int) -> User:
+        user = self.repo.get_by_id(user_id)
+        if not user:
+            raise UserNotFoundException
+
+        return user
+
+    async def get_users(self) -> list[User]:
+        return self.repo.get()
+
+    async def is_admin(self, user_id) -> bool:
+        user = self.repo.get_by_id(user_id)
+        if not user:
+            raise UserNotFoundException
+
+        return user.is_admin

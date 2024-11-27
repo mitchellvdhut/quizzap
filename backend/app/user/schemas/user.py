@@ -9,13 +9,19 @@ class CreateUserSchema(BaseModel):
     password: str
 
 
-class UserSchema(BaseModel):
+class FullUserSchema(BaseModel):
     id: HashId
     username: str
     password: str
     is_admin: bool
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserSchema(BaseModel):
+    username: str
 
     model_config = ConfigDict(from_attributes=True)
 

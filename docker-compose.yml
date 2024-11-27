@@ -11,6 +11,7 @@ services:
       - ./html:/usr/share/nginx/html
     depends_on:
       - backend
+    restart: always
     networks:
       - quizzap
 
@@ -60,6 +61,19 @@ services:
     restart: always
     networks:
       - quizzap
+
+  frontend:
+    container_name: quizzap_frontend
+    build:
+      context: frontend/.
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173" # Map Vite's default dev server port
+    volumes:
+      - .:/app # Mount local project files to the container
+      - /app/node_modules # Ensure node_modules is handled correctly
+    stdin_open: true
+    tty: true
 
 networks:
   quizzap:
