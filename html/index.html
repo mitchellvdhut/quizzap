@@ -7,61 +7,85 @@
   <title>Chat</title>
 
   <style>
-    input {
-      width: 50%;
-    }
     .inputs {
       display: grid;
       grid-template-columns: 7rem 1fr;
+      gap: .2rem 1rem;
     }
+
+    .loginputs {
+      display: grid;
+      grid-template-columns: 4rem 1fr 3rem;
+      gap: .2rem 1rem;
+    }
+
     .copy {
       cursor: pointer;
       border-radius: .3rem;
       padding: .2rem .3rem;
     }
+
     .copy:hover {
       background-color: #eee;
+    }
+
+    .logs {
+      display: flex;
+      gap: 2rem;
+      flex-flow: row wrap;
+    }
+
+    .logs>div {
+      max-width: 30%;
+    }
+
+    .logs>div>ul {
+      padding: 0 1rem;
+    }
+
+    .logs>div>ul>li {
+      white-space: break-spaces;
+      word-wrap: break-word;
     }
   </style>
 </head>
 
 <body>
   <h1>WebSocket Testing</h1>
+
   <div>
     <div>
       <h2>Create session</h2>
       <span><b>Quiz Ids:</b><span id="quiz_ids"></span></span><br><br>
+      <span id="userinfo"></span><br><br>
       <div class="inputs">
         <span>Quiz ID: </span><input type="text" id="quizId_create" autocomplete="off" />
         <span>Token: </span><input type="text" id="token_create" autocomplete="off" />
       </div>
       <button onclick="createSession(event)">Connect</button>
     </div>
+
     <hr>
+
     <div>
       <h2>Connect to session</h2>
-      <h2>Connect</h2>
       <div class="inputs">
         <span>Quiz ID: </span><input type="text" id="quizId_join" autocomplete="off" />
         <span>Session ID: </span><input type="text" id="sessionId_join" autocomplete="off" />
-        <span>Session ID: </span><input type="text" id="itemId" autocomplete="off" value="foo" />
-        <span>Token: </span><input type="text" id="token" autocomplete="off" value="?token=bar" />
+        <span>Username: </span><input type="text" id="username_join" autocomplete="off" />
       </div>
       <button onclick="joinSession(event)">Connect</button>
-      <button onclick="connect(event)">Connect</button>
     </div>
-    <hr>
-    <div>
-      <h2>Send message</h2>
-      <div class="inputs">
-        <span>Message: </span><input type="text" id="messageText" autocomplete="off" />
-      </div>
-      <button onclick="sendMessage(event)">Send</button>
-    </div>
+
     <hr>
   </div>
-  <ul id='messages'></ul>
+
+  <div class="logs" id="logs"></div>
+
   <script>
+    const https = true;
+    const s = https ? "s" : "";
+
     const actions = {
       STATUS_CODE: "STATUS_CODE",
       POOL_MESSAGE: "POOL_MESSAGE",
@@ -72,93 +96,21 @@
       SUBMIT_VOTE: "SUBMIT_VOTE",
       QUESTION_START: "QUESTION_START",
       QUESTION_STOP: "QUESTION_STOP",
-    }
-    var ws = null;    
-    var https = true;
-    var s = https ? "s" : "";
-    
-    var baseUrl = "localhost";
-    var baseApi = "api/latest";
+    };
 
-    async function main() {
-      const bearerToken = await login();
-      if (!bearerToken) return;
-      await displayQuizIds(bearerToken);
-    }
+    let sockets = {};
+    let id = 0;
 
-    async function login() {
-      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: "Admin",
-          password: "Admin"
-        }),
-      })
+    const baseUrl = "localhost";
+    const baseApi = "api/latest";
 
-      if (response.status == 401) {
-        alert('username: Admin; password: Admin; is not recognized.\nCannot prefill an access token or the quiz ids.')
-        return null;
-      }
+    const credentials = {
+      username: "Admin",
+      password: "Admin"
+    };
 
-      const tokens = await response.json();
-      const bearerToken = `Bearer ${tokens.access_token}`;
-
-      document.getElementById("token_create").value = bearerToken;
-      // document.getElementById("token_join").value = bearerToken;
-
-      return bearerToken;
-    }
-    async function displayQuizIds(bearerToken) {
-      var quiz_ids = document.getElementById("quiz_ids");
-
-      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/quizzes`, {
-        headers: {
-          Authorization: bearerToken
-        },
-      })
-
-      if (response.status != 200) {
-        alert('Error retrieving quizzes');
-        return;
-      }
-
-      const quizData = await response.json();
-
-      quiz_ids.innerHTML = `${quizData.map(quiz => `
-        <span class="copy" onclick="navigator.clipboard.writeText('${quiz.id}');">${quiz.id}</span>
-      `)}`;
-
-      document.getElementById("quizId_create").value = quizData[0].id;
-      document.getElementById("quizId_join").value = quizData[0].id;
-    }
-    function createSession(e) {
-      e.preventDefault()
-
-      var quizId = document.getElementById("quizId_create").value
-      var token = document.getElementById("token_create").value
-
-      console.log(quizId, token)
-
-      ws = new WebSocket(`w${s}://${baseUrl}:8000/api/latest/quizzes/${quizId}/ws`);
-      // ws = new WebSocket("ws://localhost:8000/api/latest/ws")
-
-      ws.onmessage = function (event) {
-        var messages = document.getElementById('messages')
-        var message = document.createElement('li')
-        var content = document.createTextNode(event.data)
-        message.appendChild(content)
-        messages.appendChild(message)
-      };
-
-      event.preventDefault()
-    }
-
-    function sendMessage(event) {
-      var input = document.getElementById("messageText")
-      ws.send(input.value)
-      input.value = ''
-      event.preventDefault()
+    function scanMessage(event) {
+      console.log(event.data)
     }
 
     function swipeMeal(event) {
@@ -172,14 +124,168 @@
           like: input_2.checked
         }
       }
-      
+
       console.log(JSON.stringify(packet))
       ws.send(JSON.stringify(packet))
       input.value = ''
       event.preventDefault()
-    } 
+    }
 
-    // main()
+    async function main() {
+      const bearerToken = await login();
+      if (!bearerToken) return;
+      await displayQuizIds(bearerToken);
+    }
+
+    async function login() {
+      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      })
+
+      if (response.status == 401) {
+        alert('username: Admin; password: Admin; is not recognized.\nCannot prefill an access token or the quiz ids.')
+        return null;
+      }
+
+      const tokens = await response.json();
+      const accessToken = tokens.access_token;
+
+      document.getElementById("token_create").value = accessToken;
+      document.getElementById("userinfo").innerText = `Auto filled token represents user '${credentials.username}'`;
+
+      return accessToken;
+    }
+
+    async function displayQuizIds(accessToken) {
+      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/quizzes`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      })
+
+      if (response.status != 200) {
+        alert('Error retrieving quizzes');
+        return;
+      }
+
+      const quizData = await response.json();
+      var quiz_ids = document.getElementById("quiz_ids");
+
+      quizData.forEach(quiz => {
+        const span = document.createElement('span');
+        span.appendChild(document.createTextNode(quiz.id));
+        span.className = "copy";
+        span.onclick = function () {
+          document.getElementById("quizId_create").value = quiz.id;
+          document.getElementById("quizId_join").value = quiz.id;
+        }
+        quiz_ids.appendChild(span);
+      });
+
+      document.getElementById("quizId_create").value = quizData[0].id;
+      document.getElementById("quizId_join").value = quizData[0].id;
+    }
+
+    function createSession(e) {
+      e.preventDefault()
+
+      var quizId = document.getElementById("quizId_create").value
+      var token = document.getElementById("token_create").value
+
+      const ws = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
+
+      ws.onmessage = function (event) { appendMessage(id, event) };
+
+      sockets[++id] = { ws, quizId };
+
+      initMessageLog(id, quizId)
+    }
+
+    function initMessageLog(id, quizId) {
+      const logs = document.getElementById('logs');
+      const logDiv = document.createElement('div');
+
+      const h3 = document.createElement('h3');
+      h3.appendChild(document.createTextNode(`ID: ${id} - QuizId: ${quizId} `));
+
+      const disconnectButton = document.createElement('button');
+      disconnectButton.appendChild(document.createTextNode('Disconnect'));
+      disconnectButton.onclick = function (event) {
+        console.log(id, sockets)
+        sockets[id].ws.close(1000);
+        delete sockets[id];
+        logDiv.remove();
+      };
+      h3.appendChild(disconnectButton);
+      console.log(sockets)
+
+      const ul = document.createElement('ul');
+      ul.id = `messages_${id}`;
+
+      const sendMsgDiv = document.createElement('div');
+      const h2 = document.createElement('h2');
+      h2.appendChild(document.createTextNode('Send message'));
+
+      const inputDiv = document.createElement('div');
+      inputDiv.className = "loginputs";
+
+      const span = document.createElement('span');
+      span.appendChild(document.createTextNode('Message:'));
+
+      const input = document.createElement('input');
+      input.type = "text";
+      input.id = "messageText_id";
+      input.autocomplete = "off";
+      input.id = `messageText_${id}`;
+
+      const sendButton = document.createElement('button');
+      sendButton.appendChild(document.createTextNode('Send'));
+      sendButton.onclick = function () { sendMessage(id); };
+
+      const hr = document.createElement('hr');
+
+      inputDiv.appendChild(span);
+      inputDiv.appendChild(input);
+      inputDiv.appendChild(sendButton);
+
+      sendMsgDiv.appendChild(h2);
+      sendMsgDiv.appendChild(inputDiv);
+
+      logDiv.appendChild(h3);
+      logDiv.appendChild(sendMsgDiv);
+
+      logDiv.appendChild(hr);
+
+      logDiv.appendChild(ul);
+      logs.appendChild(logDiv);
+
+      logDiv.appendChild(hr);
+    }
+
+    function appendMessage(id, event) {
+      scanMessage(event);
+      const messages = document.getElementById(`messages_${id}`)
+
+      const message = document.createElement('li');
+
+      const content = document.createTextNode(event.data);
+      message.appendChild(content);
+
+      messages.appendChild(message);
+    }
+
+    function sendMessage(id) {
+      ws = sockets[id];
+
+      var input = document.getElementById(`messageText_${id}`)
+
+      sockets[id].ws.send(input.value)
+      input.value = ''
+    }
+
+    main()
   </script>
 </body>
 
