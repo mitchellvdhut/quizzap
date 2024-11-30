@@ -138,7 +138,7 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-setup_logging("root")
+setup_logging("quizzap")
 
 
 # Greg is disappointed

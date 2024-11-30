@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from typing import Any, Type
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketState
@@ -12,8 +13,9 @@ from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
 
 
 class WebSocketConnection(WebSocket):
-    def __init__(self, websocket: WebSocket):
+    async def __init__(self, websocket: WebSocket):
         self.ws = websocket
+        self.ws.accept()
 
     @property
     def id(self):
@@ -41,6 +43,8 @@ class WebSocketConnection(WebSocket):
                     self.ws.receive_text(),
                     timeout=timeout,
                 )
+                logger = logging.getLogger("quizzap")
+                logger.info(data)
 
             except asyncio.TimeoutError:
                 return None

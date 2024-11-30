@@ -2,7 +2,7 @@ from typing import Any, Type
 
 from core.exceptions.websocket import AccessDeniedException
 from core.helpers.websocket.active_pools import ActivePools
-from core.exceptions.base import CustomException
+from core.exceptions.base import CustomException, UnauthorizedException
 from core.helpers.websocket.permission.permission_dependency import (
     WebsocketPermission,
     PermItem,
@@ -20,6 +20,7 @@ class WebSocketConnectionManager:
     async def check_auth(
         self,
         *perms: PermItem,
+        access_token: str | None = None,
         **kwargs,
     ):
         if not perms:
@@ -28,12 +29,12 @@ class WebSocketConnectionManager:
         perm_checker = WebsocketPermission(perms)
 
         try:
-            await perm_checker(**kwargs)
+            await perm_checker(access_token, **kwargs)
 
-        except CustomException as exc:
-            return exc
+        except UnauthorizedException:
+            return False
 
-        return None
+        return True
 
     async def connect(
         self,

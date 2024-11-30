@@ -9,7 +9,7 @@ async def get_cookie_or_token(
 ):
     """Retrieve access_token from cookie or query parameter"""
     if access_token is None and token is None:
-        logger = logging.getLogger("root")
+        logger = logging.getLogger("quizzap")
         logger.error("No cookie or token provided.")
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
     return access_token or token

@@ -5,9 +5,11 @@ import logging
 from typing import Type
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from starlette.websockets import WebSocketState
+from core.helpers.websocket.websocket import WebSocketConnection
 from core.db.enums import WebsocketActionEnum
 from core.exceptions.base import CustomException
 from core.exceptions.websocket import (
+    AccessDeniedException,
     ActionNotImplementedException,
     SuccessfullConnection,
 )
@@ -17,14 +19,19 @@ from core.helpers.websocket.manager import WebSocketConnectionManager
 
 
 class BaseWebsocketService:
-    def __init__(
+    async def __init__(
         self,
         manager: WebSocketConnectionManager,
+        websocket: WebSocket,
         schema: Type[BaseWebsocketPacketSchema] = BaseWebsocketPacketSchema,
         actions: dict = None,
     ) -> None:
         self.manager = manager
         self.schema = schema
+
+        self.pool_id = None
+
+        self.ws = await WebSocketConnection(websocket)
 
         if not actions:
             self.actions = {
@@ -36,8 +43,7 @@ class BaseWebsocketService:
 
     async def handler(
         self,
-        websocket: WebSocket,
-        pool_id: int,
+        pool_id: str,
         **kwargs,
     ) -> None:
         """The handler for the Websocket protocol.
@@ -49,48 +55,51 @@ class BaseWebsocketService:
             kwargs: Any extra arguments which will be passed to the functions ran by
             the handler.
         """
-        await self.manager.connect(websocket, pool_id)
-        await self.manager.handle_connection_code(websocket, SuccessfullConnection)
+        self.pool_id = pool_id
+
+        await self.manager.connect(self.ws, pool_id)
+        await self.manager.handle_connection_code(self.ws, SuccessfullConnection)
 
         try:
             while (
-                websocket.application_state == WebSocketState.CONNECTED
-                and websocket.client_state == WebSocketState.CONNECTED
+                self.ws.application_state == WebSocketState.CONNECTED
+                and self.ws.client_state == WebSocketState.CONNECTED
             ):
                 try:
-                    packet: self.schema = await self.manager.receive_data(
-                        websocket,
+                    packet: BaseWebsocketPacketSchema = await self.ws.listen(
                         self.schema,
+                        timeout=0.1,
                     )
 
                 except CustomException as exc:
                     await self.manager.handle_connection_code(
-                        websocket,
+                        self.ws,
                         exc,
                     )
 
                 else:
-                    func = self.actions.get(
-                        packet.action.value,
-                        self.handle_action_not_implemented,
-                    )
+                    if not packet:
+                        await self.process()
 
-                    await self.manager.queued_run(
-                        pool_id=pool_id,
-                        func=func,
-                        packet=packet,
-                        websocket=websocket,
-                        **kwargs,
-                    )
+                    else:
+                        func = self.actions.get(
+                            packet.action.value,
+                            self.handle_action_not_implemented,
+                        )
+
+                        await func(
+                            packet=packet,
+                            **kwargs,
+                        )
 
         except WebSocketDisconnect:
             # Check because sometimes the exception is raised
             # but it's already disconnected
-            if websocket.client_state == WebSocketState.CONNECTED:
-                await self.manager.disconnect(websocket, pool_id)
+            if self.ws.client_state == WebSocketState.CONNECTED:
+                await self.manager.disconnect(self.ws, pool_id)
 
-            elif websocket.application_state == WebSocketState.CONNECTED:
-                self.manager.remove_websocket(websocket, pool_id)
+            elif self.ws.application_state == WebSocketState.CONNECTED:
+                self.manager.remove_websocket(self.ws, pool_id)
 
         except WebSocketException as exc:
             get_logger(exc)
@@ -100,9 +109,25 @@ class BaseWebsocketService:
             logging.exception(exc)
             print(exc)
 
+    async def process(
+        self,
+        **kwargs,
+    ):
+        del kwargs
+
+    async def handle_unautorized(
+        self,
+        **kwargs,
+    ):
+        del kwargs
+
+        await self.manager.handle_connection_code(
+            self.ws,
+            AccessDeniedException,
+        )
+    
     async def handle_action_not_implemented(
         self,
-        websocket: WebSocket,
         **kwargs,
     ):
         """Handle an action packet that has not been implemented.
@@ -116,14 +141,13 @@ class BaseWebsocketService:
         del kwargs
 
         await self.manager.handle_connection_code(
-            websocket,
+            self.ws,
             ActionNotImplementedException,
         )
 
     async def handle_global_message(
         self,
         packet: BaseWebsocketPacketSchema,
-        websocket: WebSocket,
         **kwargs,
     ):
         """Handle a global message sent by an admin user to all participants of a
@@ -139,15 +163,13 @@ class BaseWebsocketService:
         del kwargs
 
         await self.manager.handle_global_message(
-            websocket,
+            self.ws,
             packet.payload.get("message"),
         )
 
     async def handle_pool_message(
         self,
-        pool_id: int,
         packet: BaseWebsocketPacketSchema,
-        websocket: WebSocket,
         **kwargs,
     ):
         """Handle a message sent by a participant of a pool to the entire pool.
@@ -163,7 +185,7 @@ class BaseWebsocketService:
         del kwargs
 
         await self.manager.handle_pool_message(
-            websocket,
-            pool_id,
+            self.ws,
+            self.pool_id,
             packet.payload.get("message"),
         )

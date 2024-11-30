@@ -8,13 +8,14 @@ from core.exceptions.base import CustomException
 
 
 class AllowAll(BaseWebsocketPermission):
-    async def has_permission(self, **kwargs) -> bool:
+    async def has_permission(self, pool_id: str, access_token: str, **kwargs) -> bool:
+        del pool_id, access_token, kwargs
         return True
 
 
 class IsAuthenticated(BaseWebsocketPermission):
-    async def has_permission(self, **kwargs) -> bool:
-        access_token = kwargs.get("access_token")
+    async def has_permission(self, pool_id: str, access_token: str, **kwargs) -> bool:
+        del pool_id, kwargs
 
         if not access_token:
             return False

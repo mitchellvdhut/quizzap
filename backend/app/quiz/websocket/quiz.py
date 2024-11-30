@@ -1,6 +1,7 @@
 """Module containing the base websocket service for other variations to extend upon.
 """
 
+# import os
 from fastapi import WebSocket
 from core.helpers.websocket import manager
 from core.db.enums import WebsocketActionEnum
@@ -10,7 +11,11 @@ from core.helpers.websocket.permission.permission_dependency import PermList
 
 
 class QuizWebsocketService(BaseWebsocketService):
-    def __init__(self, perms: PermList | None = None):
+    async def __init__(
+        self,
+        websocket: WebSocket,
+        perms: PermList | None = None,
+    ):
         actions = {
             WebsocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
             WebsocketActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
@@ -18,20 +23,34 @@ class QuizWebsocketService(BaseWebsocketService):
 
         self.perms = perms
 
-        super().__init__(
+        await super().__init__(
             manager,
+            websocket,
             QuizWebsocketPacketSchema,
             actions,
         )
 
-    def handler(
+    async def handler(
         self,
-        websocket: WebSocket,
-        session_id: str,
-        access_token: str,
+        quiz_id: int,
+        session_id: str | None = None,
+        access_token: str | None = None,
     ):
-        pool_id = session_id
+        if not await self.manager.check_auth(
+            *self.perms,
+            access_token=access_token,
+        ):
+            await self.handle_unautorized()
+            await self.ws.close()
+            return
 
-        self.manager.check_auth(*self.perms)
+        return await super().handler(
+            pool_id=session_id,
+            quiz_id=quiz_id,
+        )
 
-        return super().handler(websocket, pool_id)
+    async def process(
+        self,
+        **kwargs,
+    ):
+        del kwargs
