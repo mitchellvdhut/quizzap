@@ -24,12 +24,10 @@ async def websocket_endpoint(
     logger.debug(f"{quiz_id = }")
     logger.debug(f"{access_token = }")
 
-    service = await QuizWebsocketService(
+    await QuizWebsocketService(
         websocket,
         [IsAuthenticated],
-    )
-    
-    await service.handler(
+    ).handler(
         quiz_id=quiz_id,
         access_token=access_token,
     )

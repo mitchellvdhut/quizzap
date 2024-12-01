@@ -20,6 +20,7 @@ class WebSocketConnectionManager:
     async def check_auth(
         self,
         *perms: PermItem,
+        pool_id: str | None = None,
         access_token: str | None = None,
         **kwargs,
     ):
@@ -29,7 +30,7 @@ class WebSocketConnectionManager:
         perm_checker = WebsocketPermission(perms)
 
         try:
-            await perm_checker(access_token, **kwargs)
+            await perm_checker(pool_id, access_token, **kwargs)
 
         except UnauthorizedException:
             return False

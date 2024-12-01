@@ -11,7 +11,7 @@ from core.helpers.websocket.permission.permission_dependency import PermList
 
 
 class QuizWebsocketService(BaseWebsocketService):
-    async def __init__(
+    def __init__(
         self,
         websocket: WebSocket,
         perms: PermList | None = None,
@@ -23,7 +23,7 @@ class QuizWebsocketService(BaseWebsocketService):
 
         self.perms = perms
 
-        await super().__init__(
+        super().__init__(
             manager,
             websocket,
             QuizWebsocketPacketSchema,
@@ -36,8 +36,11 @@ class QuizWebsocketService(BaseWebsocketService):
         session_id: str | None = None,
         access_token: str | None = None,
     ):
+        await self.initialize()
+
         if not await self.manager.check_auth(
             *self.perms,
+            pool_id=session_id,
             access_token=access_token,
         ):
             await self.handle_unautorized()

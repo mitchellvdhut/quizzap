@@ -12,25 +12,27 @@ from core.exceptions.websocket import ActionNotFoundException, JSONSerializableE
 from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
 
 
-class WebSocketConnection(WebSocket):
-    async def __init__(self, websocket: WebSocket):
-        self.ws = websocket
-        self.ws.accept()
+class WebSocketConnection:
+    def __init__(self, websocket: WebSocket):
+        self.websocket = websocket
+        self.accepted = False
 
     @property
     def id(self):
         return id(self.websocket)
+
+    async def accept(self) -> None:
+        if not self.accepted:
+            await self.websocket.accept()
+            self.accepted = True
 
     async def send(
         self,
         data: dict[str, Any],
     ):
         print("WEBSOCKET SENDING:", data)
-        if (
-            self.ws.client_state == WebSocketState.CONNECTED
-            and self.ws.application_state == WebSocketState.CONNECTED
-        ):
-            await self.ws.send_json(data)
+        if self.is_connected:
+            await self.websocket.send_json(data)
 
     async def listen(
         self,
@@ -40,7 +42,7 @@ class WebSocketConnection(WebSocket):
         if timeout:
             try:
                 data = await asyncio.wait_for(
-                    self.ws.receive_text(),
+                    self.websocket.receive_text(),
                     timeout=timeout,
                 )
                 logger = logging.getLogger("quizzap")
@@ -48,8 +50,9 @@ class WebSocketConnection(WebSocket):
 
             except asyncio.TimeoutError:
                 return None
+
         else:
-            data = await self.ws.receive_text()
+            data = await self.websocket.receive_text()
 
         try:
             data_json = json.loads(data)
@@ -62,11 +65,14 @@ class WebSocketConnection(WebSocket):
             raise ActionNotFoundException from exc
 
         return packet
-    
+
     async def status_code(
         self,
         exception: CustomException,
     ) -> None:
+        if not self.accepted:
+            raise Exception("WebSocket was not accepted.")
+
         packet = BaseWebsocketPacketSchema(
             action=WebsocketActionEnum.STATUS_CODE,
             status_code=exception.status_code,
@@ -74,4 +80,17 @@ class WebSocketConnection(WebSocket):
             payload=None,
         )
 
-        await self.send(packet)
+        await self.send(packet.model_dump())
+
+    @property
+    def is_connected(self):
+        return self.websocket.client_state == WebSocketState.CONNECTED and self.websocket.application_state == WebSocketState.CONNECTED
+
+    @property
+    def is_client_connected(self):
+        return self.websocket.client_state == WebSocketState.CONNECTED
+
+    @property
+    def is_application_connected(self):
+        return self.websocket.application_state == WebSocketState.CONNECTED
+    

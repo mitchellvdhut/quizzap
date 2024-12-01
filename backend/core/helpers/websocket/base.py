@@ -19,7 +19,7 @@ from core.helpers.websocket.manager import WebSocketConnectionManager
 
 
 class BaseWebsocketService:
-    async def __init__(
+    def __init__(
         self,
         manager: WebSocketConnectionManager,
         websocket: WebSocket,
@@ -31,7 +31,7 @@ class BaseWebsocketService:
 
         self.pool_id = None
 
-        self.ws = await WebSocketConnection(websocket)
+        self.ws = WebSocketConnection(websocket)
 
         if not actions:
             self.actions = {
@@ -40,6 +40,9 @@ class BaseWebsocketService:
             }
         else:
             self.actions = actions
+
+    async def initialize(self):
+        await self.ws.accept()
 
     async def handler(
         self,
@@ -58,13 +61,10 @@ class BaseWebsocketService:
         self.pool_id = pool_id
 
         await self.manager.connect(self.ws, pool_id)
-        await self.manager.handle_connection_code(self.ws, SuccessfullConnection)
+        await self.ws.status_code(SuccessfullConnection)
 
         try:
-            while (
-                self.ws.application_state == WebSocketState.CONNECTED
-                and self.ws.client_state == WebSocketState.CONNECTED
-            ):
+            while self.ws.is_connected:
                 try:
                     packet: BaseWebsocketPacketSchema = await self.ws.listen(
                         self.schema,
@@ -72,10 +72,7 @@ class BaseWebsocketService:
                     )
 
                 except CustomException as exc:
-                    await self.manager.handle_connection_code(
-                        self.ws,
-                        exc,
-                    )
+                    await self.ws.status_code(exc)
 
                 else:
                     if not packet:
@@ -95,10 +92,10 @@ class BaseWebsocketService:
         except WebSocketDisconnect:
             # Check because sometimes the exception is raised
             # but it's already disconnected
-            if self.ws.client_state == WebSocketState.CONNECTED:
+            if self.ws.is_client_connected:
                 await self.manager.disconnect(self.ws, pool_id)
 
-            elif self.ws.application_state == WebSocketState.CONNECTED:
+            elif self.ws.is_application_connected:
                 self.manager.remove_websocket(self.ws, pool_id)
 
         except WebSocketException as exc:
@@ -121,10 +118,7 @@ class BaseWebsocketService:
     ):
         del kwargs
 
-        await self.manager.handle_connection_code(
-            self.ws,
-            AccessDeniedException,
-        )
+        await self.ws.status_code(AccessDeniedException)
     
     async def handle_action_not_implemented(
         self,
@@ -140,10 +134,7 @@ class BaseWebsocketService:
         """
         del kwargs
 
-        await self.manager.handle_connection_code(
-            self.ws,
-            ActionNotImplementedException,
-        )
+        await self.ws.status_code(ActionNotImplementedException)
 
     async def handle_global_message(
         self,

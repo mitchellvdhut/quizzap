@@ -59,7 +59,7 @@ class PermissionDependency(SecurityBase):
                 if skip_until_or:
                     continue
 
-                has_permission = await PermissionDependency.check_permissions(perm)
+                has_permission = await self.check_permissions(perm)
                 has_permission = not has_permission if invert_next else has_permission
                 invert_next = False
                 continue
