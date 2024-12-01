@@ -167,6 +167,15 @@
       password: "Admin"
     };
 
+    async function main() {
+      initMsgCraft()
+
+      const bearerToken = await login();
+      if (!bearerToken) return;
+
+      await displayQuizIds(bearerToken);
+    }
+
     function scanMessage(event) {
       const packet = JSON.parse(event.data);
 
@@ -181,25 +190,16 @@
       }
     }
 
-    async function main() {
-      initMsgCraft()
-
-      const bearerToken = await login();
-      if (!bearerToken) return;
-
-      await displayQuizIds(bearerToken);
-    }
-
     function updateSessionIds(sessionId) {
       const session_ids = document.getElementById('session_ids');
 
       const span = document.createElement('span');
-        span.appendChild(document.createTextNode(sessionId));
-        span.className = "copy";
-        span.onclick = function () {
-          document.getElementById("sessionId_join").value = sessionId;
-        }
-        session_ids.appendChild(span);
+      span.appendChild(document.createTextNode(sessionId));
+      span.className = "copy";
+      span.onclick = function () {
+        document.getElementById("sessionId_join").value = sessionId;
+      }
+      session_ids.appendChild(span);
     }
 
     function initMsgCraft() {
@@ -263,36 +263,6 @@
       return accessToken;
     }
 
-    async function displayQuizIds(accessToken) {
-      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/quizzes`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        },
-      })
-
-      if (response.status != 200) {
-        alert('Error retrieving quizzes');
-        return;
-      }
-
-      const quizData = await response.json();
-      var quiz_ids = document.getElementById("quiz_ids");
-
-      quizData.forEach(quiz => {
-        const span = document.createElement('span');
-        span.appendChild(document.createTextNode(quiz.id));
-        span.className = "copy";
-        span.onclick = function () {
-          document.getElementById("quizId_create").value = quiz.id;
-          document.getElementById("quizId_join").value = quiz.id;
-        }
-        quiz_ids.appendChild(span);
-      });
-
-      document.getElementById("quizId_create").value = quizData[0].id;
-      document.getElementById("quizId_join").value = quizData[0].id;
-    }
-
     function joinSession() {
       const quizId = document.getElementById("quizId_join").value;
       const sessionId = document.getElementById("sessionId_join").value;
@@ -327,13 +297,43 @@
       initMessageLog(globalId, quizId, credentials.username)
     }
 
+    async function displayQuizIds(accessToken) {
+      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/quizzes`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      })
+
+      if (response.status != 200) {
+        alert('Error retrieving quizzes');
+        return;
+      }
+
+      const quizData = await response.json();
+      var quiz_ids = document.getElementById("quiz_ids");
+
+      quizData.forEach(quiz => {
+        const span = document.createElement('span');
+        span.appendChild(document.createTextNode(quiz.id));
+        span.className = "copy";
+        span.onclick = function () {
+          document.getElementById("quizId_create").value = quiz.id;
+          document.getElementById("quizId_join").value = quiz.id;
+        }
+        quiz_ids.appendChild(span);
+      });
+
+      document.getElementById("quizId_create").value = quizData[0].id;
+      document.getElementById("quizId_join").value = quizData[0].id;
+    }
+
     function initMessageLog(id, quizId, username) {
       const logs = document.getElementById('logs');
       const logDiv = document.createElement('div');
 
       const h3 = document.createElement('h3');
       h3.appendChild(document.createTextNode(`ID: ${id} - QuizId: ${quizId} `));
-      
+
       const h2_username = document.createElement('h2');
       h2_username.appendChild(document.createTextNode(`Username: ${username}`));
 
