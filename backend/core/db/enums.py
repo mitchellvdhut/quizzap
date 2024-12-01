@@ -30,6 +30,7 @@ class WebsocketSessionEnum(str, BaseEnum):
 
 class QuizSessionActionEnum(str, BaseEnum):
     # When editing this, edit app\swipe_session\services\action_docs.py too
-    SUBMIT_VOTE = "SUBMIT_VOTE"       # Send an answer vote to the session 
-    QUESTION_START = "QUESTION_START" # Notify next question
-    QUESTION_STOP = "QUESTION_STOP"   # Notify no question
+    SESSION_CREATED = "SESSION_CREATED"  # Respond with a new session ID 
+    SUBMIT_VOTE = "SUBMIT_VOTE"          # Send an answer vote to the session 
+    QUESTION_START = "QUESTION_START"    # Notify next question
+    QUESTION_STOP = "QUESTION_STOP"      # Notify no question

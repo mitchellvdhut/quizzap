@@ -16,6 +16,7 @@ from core.exceptions.websocket import (
 from core.helpers.logger import get_logger
 from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
 from core.helpers.websocket.manager import WebSocketConnectionManager
+from core.helpers.websocket.permission.permission_dependency import PermList
 
 
 class BaseWebsocketService:
@@ -23,11 +24,13 @@ class BaseWebsocketService:
         self,
         manager: WebSocketConnectionManager,
         websocket: WebSocket,
+        perms: PermList | None = None,
         schema: Type[BaseWebsocketPacketSchema] = BaseWebsocketPacketSchema,
-        actions: dict = None,
+        actions: dict | None = None,
     ) -> None:
         self.manager = manager
         self.schema = schema
+        self.perms = perms
 
         self.pool_id = None
 
@@ -44,11 +47,19 @@ class BaseWebsocketService:
     async def initialize(self):
         await self.ws.accept()
 
-    async def handler(
+    async def start(
         self,
         pool_id: str,
         **kwargs,
     ) -> None:
+        self.pool_id = pool_id
+
+        await self.manager.connect(self.ws, pool_id)
+        await self.ws.status_code(SuccessfullConnection)
+
+        await self.handler(pool_id, **kwargs)
+
+    async def handler(self, **kwargs) -> None:
         """The handler for the Websocket protocol.
 
         Args:
@@ -58,11 +69,6 @@ class BaseWebsocketService:
             kwargs: Any extra arguments which will be passed to the functions ran by
             the handler.
         """
-        self.pool_id = pool_id
-
-        await self.manager.connect(self.ws, pool_id)
-        await self.ws.status_code(SuccessfullConnection)
-
         try:
             while self.ws.is_connected:
                 try:
@@ -76,7 +82,7 @@ class BaseWebsocketService:
 
                 else:
                     if not packet:
-                        await self.process()
+                        await self.process(**kwargs)
 
                     else:
                         func = self.actions.get(
@@ -93,16 +99,16 @@ class BaseWebsocketService:
             # Check because sometimes the exception is raised
             # but it's already disconnected
             if self.ws.is_client_connected:
-                await self.manager.disconnect(self.ws, pool_id)
+                await self.manager.disconnect(self.ws, self.pool_id)
 
             elif self.ws.is_application_connected:
-                self.manager.remove_websocket(self.ws, pool_id)
+                self.manager.remove_websocket(self.ws, self.pool_id)
 
         except WebSocketException as exc:
             get_logger(exc)
             logging.info(self.active_pools)
-            logging.info(f"pool_id {pool_id}, func: {func.__name__}")
-            logging.info(self.active_pools.get(pool_id))
+            logging.info(f"pool_id {self.pool_id}, func: {func.__name__}")
+            logging.info(self.active_pools.get(self.pool_id))
             logging.exception(exc)
             print(exc)
 
@@ -112,18 +118,12 @@ class BaseWebsocketService:
     ):
         del kwargs
 
-    async def handle_unautorized(
-        self,
-        **kwargs,
-    ):
+    async def handle_unautorized(self, **kwargs) -> None:
         del kwargs
 
         await self.ws.status_code(AccessDeniedException)
-    
-    async def handle_action_not_implemented(
-        self,
-        **kwargs,
-    ):
+
+    async def handle_action_not_implemented(self, **kwargs) -> None:
         """Handle an action packet that has not been implemented.
 
         Args:
@@ -139,8 +139,9 @@ class BaseWebsocketService:
     async def handle_global_message(
         self,
         packet: BaseWebsocketPacketSchema,
+        message: str | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Handle a global message sent by an admin user to all participants of a
         swipe session.
 
@@ -153,20 +154,27 @@ class BaseWebsocketService:
         """
         del kwargs
 
-        await self.manager.handle_global_message(
-            self.ws,
-            packet.payload.get("message"),
+        if not message:
+            message = "broadcasted message sent by user"
+
+        packet = BaseWebsocketPacketSchema(
+            status_code=200,
+            message=message,
+            action=WebsocketActionEnum.GLOBAL_MESSAGE,
+            payload=packet.payload,
         )
+
+        await self.manager.global_packet(packet)
 
     async def handle_pool_message(
         self,
         packet: BaseWebsocketPacketSchema,
+        message: str | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Handle a message sent by a participant of a pool to the entire pool.
 
         Args:
-            pool_id (int): Identifier for the pool to send the message to.
             packet (SwipeSessionPacketSchema): WebsocketPacket sent by client.
             websocket (WebSocket): The websocket connection.
 
@@ -175,8 +183,14 @@ class BaseWebsocketService:
         """
         del kwargs
 
-        await self.manager.handle_pool_message(
-            self.ws,
-            self.pool_id,
-            packet.payload.get("message"),
+        if not message:
+            message = "message sent by user"
+
+        packet = BaseWebsocketPacketSchema(
+            status_code=200,
+            message=message,
+            action=WebsocketActionEnum.GLOBAL_MESSAGE,
+            payload=packet.payload,
         )
+
+        await self.manager.pool_packet(self.pool_id, packet)

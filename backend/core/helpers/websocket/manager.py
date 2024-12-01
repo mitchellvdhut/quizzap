@@ -1,8 +1,6 @@
-from typing import Any, Type
-
-from core.exceptions.websocket import AccessDeniedException
+from typing import Any
 from core.helpers.websocket.active_pools import ActivePools
-from core.exceptions.base import CustomException, UnauthorizedException
+from core.exceptions.base import UnauthorizedException
 from core.helpers.websocket.permission.permission_dependency import (
     WebsocketPermission,
     PermItem,
@@ -20,7 +18,6 @@ class WebSocketConnectionManager:
     async def check_auth(
         self,
         *perms: PermItem,
-        pool_id: str | None = None,
         access_token: str | None = None,
         **kwargs,
     ):
@@ -30,7 +27,7 @@ class WebSocketConnectionManager:
         perm_checker = WebsocketPermission(perms)
 
         try:
-            await perm_checker(pool_id, access_token, **kwargs)
+            await perm_checker(access_token, **kwargs)
 
         except UnauthorizedException:
             return False
@@ -41,49 +38,24 @@ class WebSocketConnectionManager:
         self,
         websocket: WebSocketConnection,
         pool_id: str,
-    ) -> WebSocketConnection:
+    ) -> None:
         await websocket.accept()
         self.active_pools.append(pool_id, websocket)
-        return websocket
-
-    async def send_data(
-        self,
-        websocket: WebSocketConnection,
-        data: dict[str, Any],
-    ) -> None:
-        return await websocket.send(data)
-
-    async def receive_data(
-        self,
-        websocket: WebSocketConnection,
-        schema: Type[BaseWebsocketPacketSchema],
-        timeout: float | None = None,
-    ) -> BaseWebsocketPacketSchema | None:
-        return await websocket.listen(schema, timeout)
-
-    async def deny(
-        self,
-        websocket: WebSocketConnection,
-        exception: CustomException = AccessDeniedException(),
-    ) -> None:
-        await websocket.accept()
-        await websocket.status_code(exception)
-        await websocket.close(status.WS_1000_NORMAL_CLOSURE)
-
-    def remove_websocket(
-        self,
-        websocket: WebSocketConnection,
-        pool_id: str,
-    ):
-        self.active_pools.remove(pool_id, websocket)
 
     async def disconnect(
         self,
         websocket: WebSocketConnection,
         pool_id: str,
-    ):
+    ) -> None:
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
         self.remove_websocket(websocket, pool_id)
+
+    def remove_websocket(
+        self,
+        websocket: WebSocketConnection,
+        pool_id: str,
+    ) -> None:
+        self.active_pools.remove(pool_id, websocket)
 
     async def pool_disconnect(
         self,
@@ -114,22 +86,34 @@ class WebSocketConnectionManager:
         pool_id: str,
         packet: BaseWebsocketPacketSchema,
     ) -> None:
-        for client in self.active_pools[pool_id]["clients"]:
-            await self.send_data(client["websocket"], packet.model_dump())
+        for _, client in self.active_pools[pool_id]["clients"].items():
+            await client["ws"].send(packet.model_dump())
 
     async def global_packet(
         self,
         packet: BaseWebsocketPacketSchema,
     ) -> None:
         for _, pool in self.active_pools.items():
-            for client in pool["clients"]:
-                await self.send_data(
-                    client["websocket"],
-                    packet.model_dump(),
-                )
+            for _, client in pool["clients"].items():
+                await client["ws"].send(packet.model_dump())
 
     def get_connection_count(
         self,
         pool_id: str | None = None,
     ) -> int:
         return self.active_pools.get_connection_count(pool_id)
+
+    def setdata(
+        self,
+        pool_id: str,
+        websocket_id: int,
+        data: dict[str, Any],
+    ) -> None:
+        self.active_pools.setdata(pool_id, websocket_id, data)
+
+    def getdata(
+        self,
+        pool_id: str,
+        websocket_id: int,
+    ) -> dict[str, Any]:
+        return self.active_pools.getdata(pool_id, websocket_id)

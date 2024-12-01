@@ -74,8 +74,8 @@ class WebSocketConnection:
             raise Exception("WebSocket was not accepted.")
 
         packet = BaseWebsocketPacketSchema(
-            action=WebsocketActionEnum.STATUS_CODE,
             status_code=exception.status_code,
+            action=WebsocketActionEnum.STATUS_CODE,
             message=exception.message,
             payload=None,
         )

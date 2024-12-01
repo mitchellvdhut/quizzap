@@ -46,6 +46,7 @@
       white-space: break-spaces;
       word-wrap: break-word;
     }
+
     .ws-message>div {
       display: flex;
       flex-flow: row wrap;
@@ -73,6 +74,7 @@
 
     <div>
       <h2>Connect to session</h2>
+      <span><b>Session Ids:</b><span id="session_ids"></span></span><br><br>
       <div class="inputs">
         <span>Quiz ID: </span><input type="text" id="quizId_join" autocomplete="off" />
         <span>Session ID: </span><input type="text" id="sessionId_join" autocomplete="off" />
@@ -82,9 +84,42 @@
     </div>
 
     <hr>
+
+    <div>
+      <h2>Craft a message</h2>
+      <div class="inputs">
+        <div></div><sup>STATUS_CODE, POOL_MESSAGE, GLOBAL_MESSAGE, USER_CONNECT, USER_DISCONNECT, SESSION_CLOSE,
+          SESSION_CREATED, SUBMIT_VOTE, QUESTION_START, QUESTION_STOP</sup>
+        <span>Action: </span><input list="actions" id="msgCraft_action" onchange="thing()" />
+        <datalist id="actions">
+          <option value="STATUS_CODE">
+          <option value="POOL_MESSAGE">
+          <option value="GLOBAL_MESSAGE">
+          <option value="USER_CONNECT">
+          <option value="USER_DISCONNECT">
+          <option value="SESSION_CLOSE">
+          <option value="SESSION_CREATED">
+          <option value="SUBMIT_VOTE">
+          <option value="QUESTION_START">
+          <option value="QUESTION_STOP">
+        </datalist>
+
+        <div></div><sup>'Message' is simply meta information, which is not used for logic</sup>
+        <span>Message: </span><input id="msgCraft_message" onchange="thing()" />
+
+        <div></div><sup>Changin the 'Action' overwrites the payload (previous payload gets logged in the console)</sup>
+        <span>Payload: <button onclick="formatPayload()">Format</button></span><textarea id="msgCraft_payload"
+          rows="4" /></textarea>
+        <button onclick="craftMessage()">Craft</button><textarea id="msgCraft_output" rows="4" /></textarea>
+      </div>
+    </div>
   </div>
 
+  <hr>
+
   <div class="logs" id="logs"></div>
+
+  <div style="height: 50vh;"></div>
 
   <script>
     const https = true;
@@ -97,13 +132,32 @@
       USER_CONNECT: "USER_CONNECT",
       USER_DISCONNECT: "USER_DISCONNECT",
       SESSION_CLOSE: "SESSION_CLOSE",
+      SESSION_CREATED: "SESSION_CREATED",
       SUBMIT_VOTE: "SUBMIT_VOTE",
       QUESTION_START: "QUESTION_START",
       QUESTION_STOP: "QUESTION_STOP",
     };
 
+    const actionPayloadPresets = {
+      STATUS_CODE: null,
+      POOL_MESSAGE: {
+        message: "message",
+      },
+      GLOBAL_MESSAGE: {
+        message: "message",
+      },
+      USER_CONNECT: null,
+      USER_DISCONNECT: null,
+      SESSION_CLOSE: null,
+      SUBMIT_VOTE: {
+        vote: 0
+      },
+      QUESTION_START: null,
+      QUESTION_STOP: null,
+    }
+
     let sockets = {};
-    let id = 0;
+    let globalId = 0;
 
     const baseUrl = "localhost";
     const baseApi = "api/latest";
@@ -114,31 +168,78 @@
     };
 
     function scanMessage(event) {
-      console.log(event.data)
-    }
+      const packet = JSON.parse(event.data);
 
-    function swipeMeal(event) {
-      var input = document.getElementById("recipeId")
-      var input_2 = document.getElementById("recipeLike")
+      switch (packet.action) {
+        case actions.SESSION_CREATED:
+          updateSessionIds(packet.payload.session_id)
+          break;
 
-      var packet = {
-        action: actions.RECIPE_SWIPE,
-        payload: {
-          recipe_id: parseInt(input.value),
-          like: input_2.checked
-        }
+        default:
+          console.log("unhandled by scan:", packet);
+          break;
       }
-
-      console.log(JSON.stringify(packet))
-      ws.send(JSON.stringify(packet))
-      input.value = ''
-      event.preventDefault()
     }
 
     async function main() {
+      initMsgCraft()
+
       const bearerToken = await login();
       if (!bearerToken) return;
+
       await displayQuizIds(bearerToken);
+    }
+
+    function updateSessionIds(sessionId) {
+      const session_ids = document.getElementById('session_ids');
+
+      const span = document.createElement('span');
+        span.appendChild(document.createTextNode(sessionId));
+        span.className = "copy";
+        span.onclick = function () {
+          document.getElementById("sessionId_join").value = sessionId;
+        }
+        session_ids.appendChild(span);
+    }
+
+    function initMsgCraft() {
+      const actionInput = document.getElementById('msgCraft_action');
+
+      actionInput.addEventListener('input', updatePayload);
+      actionInput.addEventListener('propertychange', updatePayload);
+    }
+
+    function craftMessage() {
+      const actionInput = document.getElementById('msgCraft_action');
+      const messageInput = document.getElementById('msgCraft_message');
+      const payloadInput = document.getElementById('msgCraft_payload');
+      const output = document.getElementById('msgCraft_output');
+
+      const packet = {
+        action: actionInput.value,
+        message: messageInput.value,
+        payload: JSON.parse(payloadInput.value)
+      }
+
+      output.value = JSON.stringify(packet, null, 4);
+    }
+
+    function updatePayload(e) {
+      const action = e.target.value;
+      if (!actions[action]) return;
+
+      const payloadInput = document.getElementById('msgCraft_payload');
+      console.log("Previous payload:")
+      console.log(payloadInput.value)
+      console.log("End of payload :)")
+
+      payloadInput.value = JSON.stringify(actionPayloadPresets[action]);
+      formatPayload()
+    }
+
+    function formatPayload() {
+      const payloadInput = document.getElementById('msgCraft_payload');
+      payloadInput.value = JSON.stringify(JSON.parse(payloadInput.value), null, 4);
     }
 
     async function login() {
@@ -192,38 +293,58 @@
       document.getElementById("quizId_join").value = quizData[0].id;
     }
 
-    function createSession(e) {
-      e.preventDefault()
+    function joinSession() {
+      const quizId = document.getElementById("quizId_join").value;
+      const sessionId = document.getElementById("sessionId_join").value;
+      const username = document.getElementById("username_join").value;
 
-      var quizId = document.getElementById("quizId_create").value
-      var token = document.getElementById("token_create").value
+      globalId++;
 
-      const ws = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
+      const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${quizId}/${sessionId}?username=${username}`);
+      console.log(wsJoin)
 
-      ws.onmessage = function (event) { appendMessage(id, event) };
+      wsJoin.onmessage = function (event) { appendMessage(globalId, event) };
 
-      sockets[++id] = { ws, quizId };
+      sockets[globalId] = { wsJoin, quizId };
 
-      initMessageLog(id, quizId)
+      initMessageLog(globalId, quizId, username);
     }
 
-    function initMessageLog(id, quizId) {
+    function createSession() {
+      const quizId = document.getElementById("quizId_create").value
+      const token = document.getElementById("token_create").value
+
+      globalId++;
+
+      const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
+      console.log(wsCreate);
+
+      wsCreate.onmessage = function (event) { appendMessage(globalId, event) };
+
+      sockets[globalId] = { wsCreate, quizId };
+
+      // Uhh, yeah. Username doesnt work when putting in custom token (yet)
+      initMessageLog(globalId, quizId, credentials.username)
+    }
+
+    function initMessageLog(id, quizId, username) {
       const logs = document.getElementById('logs');
       const logDiv = document.createElement('div');
 
       const h3 = document.createElement('h3');
       h3.appendChild(document.createTextNode(`ID: ${id} - QuizId: ${quizId} `));
+      
+      const h2_username = document.createElement('h2');
+      h2_username.appendChild(document.createTextNode(`Username: ${username}`));
 
       const disconnectButton = document.createElement('button');
       disconnectButton.appendChild(document.createTextNode('Disconnect'));
       disconnectButton.onclick = function (event) {
-        console.log(id, sockets)
         sockets[id].ws.close(1000);
         delete sockets[id];
         logDiv.remove();
       };
       h3.appendChild(disconnectButton);
-      console.log(sockets)
 
       const ul = document.createElement('ul');
       ul.id = `messages_${id}`;
@@ -261,6 +382,7 @@
       sendMsgDiv.appendChild(inputDiv);
 
       logDiv.appendChild(h3);
+      logDiv.appendChild(h2_username);
       logDiv.appendChild(sendMsgDiv);
       logDiv.appendChild(h3_output);
 
@@ -304,7 +426,7 @@
       const textarea = document.createElement("textarea");
       textarea.id = `ws-message-payload-${curId}`;
       textarea.value = JSON.stringify(data.payload);
-      
+
       button.onclick = function () {
         const txt = document.getElementById(`ws-message-payload-${curId}`);
         txt.value = JSON.stringify(JSON.parse(txt.value), null, 4);

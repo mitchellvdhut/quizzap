@@ -25,11 +25,9 @@ class WebsocketPermission(PermissionDependency):
 
     async def __call__(
         self,
-        pool_id: str,
         access_token: str,
         **kwargs,
     ):
-        self.pool_id = pool_id
         self.access_token = access_token
         self.kwargs = kwargs
 
@@ -39,8 +37,7 @@ class WebsocketPermission(PermissionDependency):
             raise UnauthorizedException
 
     async def execute_perm(self, permission: BaseWebsocketPermission):
-        pool_id = self.pool_id
         access_token = self.access_token
         kwargs = self.kwargs
 
-        return await permission().has_permission(pool_id, access_token, **kwargs)
+        return await permission().has_permission(access_token, **kwargs)
