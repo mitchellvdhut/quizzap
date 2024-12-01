@@ -39,13 +39,17 @@
       max-width: 30%;
     }
 
-    .logs>div>ul {
-      padding: 0 1rem;
-    }
-
-    .logs>div>ul>li {
+    .ws-message {
+      display: flex;
+      flex-flow: column nowrap;
+      gap: .2rem;
       white-space: break-spaces;
       word-wrap: break-word;
+    }
+    .ws-message>div {
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: space-between;
     }
   </style>
 </head>
@@ -225,8 +229,11 @@
       ul.id = `messages_${id}`;
 
       const sendMsgDiv = document.createElement('div');
-      const h2 = document.createElement('h2');
-      h2.appendChild(document.createTextNode('Send message'));
+      const h3_send = document.createElement('h3');
+      h3_send.appendChild(document.createTextNode('Send message'));
+
+      const h3_output = document.createElement('h3');
+      h3_output.appendChild(document.createTextNode('Output'));
 
       const inputDiv = document.createElement('div');
       inputDiv.className = "loginputs";
@@ -250,11 +257,12 @@
       inputDiv.appendChild(input);
       inputDiv.appendChild(sendButton);
 
-      sendMsgDiv.appendChild(h2);
+      sendMsgDiv.appendChild(h3_send);
       sendMsgDiv.appendChild(inputDiv);
 
       logDiv.appendChild(h3);
       logDiv.appendChild(sendMsgDiv);
+      logDiv.appendChild(h3_output);
 
       logDiv.appendChild(hr);
 
@@ -266,14 +274,45 @@
 
     function appendMessage(id, event) {
       scanMessage(event);
+
+      data = JSON.parse(event.data)
+
       const messages = document.getElementById(`messages_${id}`)
+      const li = document.createElement("li");
+      li.className = "ws-message";
 
-      const message = document.createElement('li');
+      const statusSpan = document.createElement("span");
+      statusSpan.textContent = `${data.action} | ${data.status_code}`;
 
-      const content = document.createTextNode(event.data);
-      message.appendChild(content);
+      li.appendChild(statusSpan);
 
-      messages.appendChild(message);
+      const div = document.createElement("div");
+
+      const messageSpan = document.createElement("span");
+      messageSpan.textContent = `"${data.message}"`;
+
+      const button = document.createElement("button");
+      button.textContent = "Format";
+
+      div.appendChild(messageSpan);
+      div.appendChild(button);
+
+      li.appendChild(div);
+
+      const curId = ++id;
+
+      const textarea = document.createElement("textarea");
+      textarea.id = `ws-message-payload-${curId}`;
+      textarea.value = JSON.stringify(data.payload);
+      
+      button.onclick = function () {
+        const txt = document.getElementById(`ws-message-payload-${curId}`);
+        txt.value = JSON.stringify(JSON.parse(txt.value), null, 4);
+      }
+
+      li.appendChild(textarea);
+
+      messages.appendChild(li);
     }
 
     function sendMessage(id) {
