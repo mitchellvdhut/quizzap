@@ -1,6 +1,6 @@
 """Bundle all endpoints."""
 
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter
 
 from presentation.home.v1.home import home_v1_router
 from presentation.quiz.v1.quiz import quiz_v1_router
@@ -10,7 +10,6 @@ from presentation.quiz.v1.websocket import quiz_websocket_router
 from presentation.user.v1.user import user_v1_router
 from presentation.auth.v1.auth import auth_v1_router
 from presentation.me.v1.me import me_v1_router
-from core.versioning import version
 
 
 question_v1_router.include_router(answer_v1_router, prefix="/{question_id}/answers", tags=["Answers"])
@@ -25,15 +24,6 @@ router.include_router(user_v1_router, prefix="/users", tags=["Users"])
 router.include_router(me_v1_router, prefix="/me", tags=["Me"])
 router.include_router(quiz_v1_router, prefix="/quizzes", tags=["Quizzes"])
 router.include_router(quiz_websocket_router, prefix="/sockets", tags=["WebSockets"])
-
-
-@router.websocket("/quizzes/{quizId}/ws")
-@version(1)
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"Message text was: {data}")
 
 
 __all__ = ["router"]
