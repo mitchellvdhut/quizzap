@@ -189,7 +189,7 @@ class BaseWebsocketService:
         packet = BaseWebsocketPacketSchema(
             status_code=200,
             message=message,
-            action=WebsocketActionEnum.GLOBAL_MESSAGE,
+            action=WebsocketActionEnum.POOL_MESSAGE,
             payload=packet.payload,
         )
 

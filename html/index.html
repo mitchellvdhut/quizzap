@@ -50,6 +50,7 @@
     .ws-message>div {
       display: flex;
       flex-flow: row wrap;
+      gap: .5rem;
       justify-content: space-between;
     }
   </style>
@@ -279,7 +280,7 @@
 
       sockets[curId] = { ws: wsJoin, quizId: quizId };
 
-      initMessageLog(curId, quizId, username);
+      initMessageLog(curId, quizId, username, sessionId);
     }
 
     function createSession() {
@@ -290,7 +291,6 @@
       const curId = globalId;
 
       const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
-      console.log(wsCreate);
 
       wsCreate.onmessage = function (event) { 
         appendMessage(curId, event) 
@@ -332,7 +332,7 @@
       document.getElementById("quizId_join").value = quizData[0].id;
     }
 
-    function initMessageLog(id, quizId, username) {
+    function initMessageLog(id, quizId, username, sessionId = undefined) {
       const logs = document.getElementById('logs');
       const logDiv = document.createElement('div');
 
@@ -341,6 +341,12 @@
 
       const h2_username = document.createElement('h2');
       h2_username.appendChild(document.createTextNode(`Username: ${username}`));
+
+      let h3_session;
+      if (sessionId) {
+        h3_session = document.createElement('h3');
+        h3_session.appendChild(document.createTextNode(`Session: ${sessionId}`));
+      }
 
       const disconnectButton = document.createElement('button');
       disconnectButton.appendChild(document.createTextNode('Disconnect'));
@@ -388,6 +394,7 @@
 
       logDiv.appendChild(h3);
       logDiv.appendChild(h2_username);
+      if (sessionId) logDiv.appendChild(h3_session);
       logDiv.appendChild(sendMsgDiv);
       logDiv.appendChild(h3_output);
 
@@ -400,7 +407,6 @@
     }
 
     function appendMessage(id, event) {
-      console.log(id)
       scanMessage(event);
 
       data = JSON.parse(event.data)
@@ -427,11 +433,16 @@
 
       li.appendChild(div);
 
-      const curId = ++id;
+      const curId = ++globalId;
 
       const textarea = document.createElement("textarea");
       textarea.id = `ws-message-payload-${curId}`;
       textarea.value = JSON.stringify(data.payload);
+
+      button.onclick = function (event) {
+        console.log("Yeah!")
+        textarea.value = JSON.stringify(JSON.parse(event.target.value), null, 4);
+      }
 
       button.onclick = function () {
         const txt = document.getElementById(`ws-message-payload-${curId}`);
@@ -440,15 +451,22 @@
 
       li.appendChild(textarea);
 
-      messages.appendChild(li);
+      messages.insertBefore(li, messages.firstChild);
     }
 
     function sendMessage(id) {
       ws = sockets[id];
 
-      var input = document.getElementById(`messageText_${id}`)
+      const input = document.getElementById(`messageText_${id}`)
 
-      sockets[id].ws.send(input.value)
+      try {
+        packet = JSON.stringify(JSON.parse(input.value));
+      } catch (error) {
+        alert(error);
+        return
+      }
+
+      sockets[id].ws.send(packet)
       input.value = ''
     }
 

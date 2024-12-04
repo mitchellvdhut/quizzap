@@ -1,4 +1,3 @@
-import logging
 from fastapi import APIRouter, Depends, WebSocket
 
 from app.quiz.websocket.quiz import QuizWebsocketService
@@ -17,8 +16,6 @@ async def create_quiz_session(
     token: str,
     quiz_id: int = Depends(get_path_quiz_id),
 ):
-    logger = logging.getLogger("quizzap")
-    logger.info(f"{websocket = }")
     await QuizWebsocketService(websocket, [IsAuthenticated]).start_create_session(
         quiz_id=quiz_id,
         access_token=token,
@@ -33,9 +30,6 @@ async def join_quiz_session(
     username: str,
     quiz_id: int = Depends(get_path_quiz_id),
 ):
-    logger = logging.getLogger("quizzap")
-    logger.info(f"{websocket = }")
-
     await QuizWebsocketService(websocket, [AllowAll]).start_join_session(
         quiz_id=quiz_id,
         session_id=session_id,

@@ -137,3 +137,25 @@ class QuizWebsocketService(BaseWebsocketService):
         )
 
         await self.ws.send(packet.model_dump())
+
+    async def handle_pool_message(
+        self,
+        packet: QuizWebsocketPacketSchema,
+        message: str | None = None,
+        **kwargs,
+    ) -> None:
+        """Handle a message sent by a participant of a pool to the entire pool.
+
+        Args:
+            packet (SwipeSessionPacketSchema): WebsocketPacket sent by client.
+            websocket (WebSocket): The websocket connection.
+
+        Returns:
+            None.
+        """
+        del kwargs
+
+        packet.payload["username"] = self.manager.getdata(self.pool_id, self.ws.id)["username"]
+
+        await super().handle_pool_message(packet, message)
+
