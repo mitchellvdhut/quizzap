@@ -269,15 +269,17 @@
       const username = document.getElementById("username_join").value;
 
       globalId++;
+      const curId = globalId;
 
       const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${quizId}/${sessionId}?username=${username}`);
-      console.log(wsJoin)
 
-      wsJoin.onmessage = function (event) { appendMessage(globalId, event) };
+      wsJoin.onmessage = function (event) { 
+        appendMessage(curId, event) 
+      };
 
-      sockets[globalId] = { wsJoin, quizId };
+      sockets[curId] = { ws: wsJoin, quizId: quizId };
 
-      initMessageLog(globalId, quizId, username);
+      initMessageLog(curId, quizId, username);
     }
 
     function createSession() {
@@ -285,13 +287,16 @@
       const token = document.getElementById("token_create").value
 
       globalId++;
+      const curId = globalId;
 
       const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
       console.log(wsCreate);
 
-      wsCreate.onmessage = function (event) { appendMessage(globalId, event) };
+      wsCreate.onmessage = function (event) { 
+        appendMessage(curId, event) 
+      };
 
-      sockets[globalId] = { wsCreate, quizId };
+      sockets[curId] = { ws: wsCreate, quizId: quizId };
 
       // Uhh, yeah. Username doesnt work when putting in custom token (yet)
       initMessageLog(globalId, quizId, credentials.username)
@@ -395,6 +400,7 @@
     }
 
     function appendMessage(id, event) {
+      console.log(id)
       scanMessage(event);
 
       data = JSON.parse(event.data)
