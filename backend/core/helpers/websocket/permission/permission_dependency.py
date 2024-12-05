@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Type, Union
 
+from core.config import config
+from core.enums.internal import Modes
 from core.fastapi.dependencies.permission.permission_dependency import (
     PermissionDependency,
 )
@@ -28,6 +30,9 @@ class WebsocketPermission(PermissionDependency):
         access_token: str,
         **kwargs,
     ):
+        if config.MODE == Modes.ANARCHY:
+            return True
+        
         self.access_token = access_token
         self.kwargs = kwargs
 

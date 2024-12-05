@@ -4,9 +4,8 @@
 import logging
 from typing import Type
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
-from starlette.websockets import WebSocketState
 from core.helpers.websocket.websocket import WebSocketConnection
-from core.db.enums import WebsocketActionEnum
+from core.enums.websocket import WebsocketActionEnum
 from core.exceptions.base import CustomException
 from core.exceptions.websocket import (
     AccessDeniedException,

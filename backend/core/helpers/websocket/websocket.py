@@ -6,7 +6,7 @@ from fastapi import WebSocket
 from fastapi.websockets import WebSocketState
 from pydantic import ValidationError
 
-from core.db.enums import WebsocketActionEnum
+from core.enums.websocket import WebsocketActionEnum
 from core.exceptions.base import CustomException
 from core.exceptions.websocket import ActionNotFoundException, JSONSerializableException
 from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema

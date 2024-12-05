@@ -1,8 +1,6 @@
 """Module containing the base websocket service for other variations to extend upon.
 """
 
-# import os
-import logging
 import os
 from fastapi import WebSocket
 from app.user.services.user import UserService
@@ -11,7 +9,7 @@ from core.helpers.hashids import decode_single
 from core.helpers.token.token_helper import TokenHelper
 from core.exceptions.websocket import SessionNotFoundException, SuccessfullConnection
 from core.helpers.websocket import manager
-from core.db.enums import QuizSessionActionEnum, WebsocketActionEnum
+from core.enums.websocket import QuizSessionActionEnum, WebsocketActionEnum
 from core.helpers.websocket.schemas.packet import QuizWebsocketPacketSchema
 from core.helpers.websocket.base import BaseWebsocketService
 from core.helpers.websocket.permission.permission_dependency import PermList

@@ -1,7 +1,7 @@
 from typing import Any
 from pydantic import BaseModel
 
-from core.db.enums import QuizSessionActionEnum, WebsocketActionEnum
+from core.enums.websocket import QuizSessionActionEnum, WebsocketActionEnum
 
 
 class BaseWebsocketPacketSchema(BaseModel):
