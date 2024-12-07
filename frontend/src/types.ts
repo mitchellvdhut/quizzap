@@ -56,7 +56,7 @@ export interface Username {
 }
 
 export interface SessionId {
-  session_id: string;
+  session_id: number;
 }
 
 export interface AnswerCount {
@@ -92,6 +92,7 @@ export interface WebsocketConnection {
 
   sendPoolMessage: (packet: WebsocketPacket<Message>) => void;
   sendGlobalMessage: (packet: WebsocketPacket<Message>) => void;
+  sendCloseSession: (packet: WebsocketPacket<null>) => void;
   sendSubmitVote: (packet: WebsocketPacket<Vote>) => void;
   sendQuestionStart: (packet: WebsocketPacket<null>) => void;
   sendQuestionStop: (packet: WebsocketPacket<null>) => void;

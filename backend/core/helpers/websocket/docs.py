@@ -62,6 +62,9 @@ actions[WebsocketActionEnum.USER_DISCONNECT] = WebsocketDocsSchema(
 
 actions[WebsocketActionEnum.SESSION_CLOSE] = WebsocketDocsSchema(
     info="Action for indicating the session has been irriversibly closed.",
+    request=RequestWebsocketDocsSchema(
+        info="Request termination of quiz session closage."
+    ),
     response=ResponseWebsocketDocsSchema(
         info="Receive indication of session closage.",
         params=WebsocketPacketParams(payload={"message": "string"}),

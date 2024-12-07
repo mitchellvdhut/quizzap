@@ -26,6 +26,7 @@ class QuizWebsocketService(BaseWebsocketService):
         actions = {
             WebsocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
             WebsocketActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
+            WebsocketActionEnum.SESSION_CLOSE.value: self.handle_session_close,
             QuizSessionActionEnum.SUBMIT_VOTE: self.handle_action_not_implemented,
             QuizSessionActionEnum.QUESTION_INFO: self.handle_action_not_implemented,
             QuizSessionActionEnum.QUESTION_START: self.handle_action_not_implemented,
@@ -89,7 +90,7 @@ class QuizWebsocketService(BaseWebsocketService):
     async def start_join_session(
         self,
         quiz_id: int,
-        session_id: str,
+        session_id: int,
         username: str,
     ):
         self.pool_id = session_id
@@ -140,7 +141,7 @@ class QuizWebsocketService(BaseWebsocketService):
         while not self.pool_id or self.manager.active_pools.get(self.pool_id):
             self.pool_id = random.randint(100000, 999999)
 
-    async def handle_created_session(self, session_id: str) -> None:
+    async def handle_created_session(self, session_id: int) -> None:
         packet = QuizWebsocketPacketSchema(
             status_code=201,
             action=QuizSessionActionEnum.SESSION_CREATED,

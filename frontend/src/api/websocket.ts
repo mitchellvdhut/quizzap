@@ -24,6 +24,7 @@ export function startWebsocket(url: string): WebsocketConnection {
 
     sendPoolMessage: (packet) => defaultSend<typeof packet.payload>(ws, packet),
     sendGlobalMessage: (packet) => defaultSend<typeof packet.payload>(ws, packet),
+    sendCloseSession: (packet) => defaultSend<typeof packet.payload>(ws, packet),
     sendSubmitVote: (packet) => defaultSend<typeof packet.payload>(ws, packet),
     sendQuestionStart: (packet) => defaultSend<typeof packet.payload>(ws, packet),
     sendQuestionStop: (packet) => defaultSend<typeof packet.payload>(ws, packet),

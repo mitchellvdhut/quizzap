@@ -10,6 +10,8 @@ Created and maintained by [Mitchell](https://github.com/mitchellvdhut) and [Tijm
 Quizzap lets you manage quizzes, host quiz sessions, and have players join in for some epic trivia battles. Why pay for fun when you can have it for free? 😏  
 And yes, we even added an **Anarchy mode** for the rebels out there who really despise Authentication. 🔥
 
+Show us some love with a ⭐ if you like what we’re building—this is our passion project!
+
 ---
 
 ## ✨ Features
@@ -77,7 +79,7 @@ Currently, the frontend isn't Dockerized. You'll need **Node.js** installed.
 ## 🎯 Usage  
 
 - **Backend API Docs**: [https://localhost/api/latest/docs](https://localhost/api/latest/docs)  
-- **Quiz Sessions**: [https://localhost/](https://localhost/)  
+- **Quiz Sessions Testing**: [https://localhost/](https://localhost/)  
 - **Frontend App**: [http://localhost:5173/](http://localhost:5173/)  
 - **phpMyAdmin**: [http://localhost:8080/](http://localhost:8080/)  
 

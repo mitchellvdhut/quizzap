@@ -91,7 +91,7 @@
       <div class="inputs">
         <div></div><sup>STATUS_CODE, POOL_MESSAGE, GLOBAL_MESSAGE, USER_CONNECT, USER_DISCONNECT, SESSION_CLOSE,
           SESSION_CREATED, SUBMIT_VOTE, QUESTION_START, QUESTION_STOP</sup>
-        <span>Action: </span><input list="actions" id="msgCraft_action" onchange="thing()" />
+        <span>Action: </span><input list="actions" id="msgCraft_action" />
         <datalist id="actions">
           <option value="STATUS_CODE">
           <option value="POOL_MESSAGE">
@@ -106,7 +106,7 @@
         </datalist>
 
         <div></div><sup>'Message' is simply meta information, which is not used for logic</sup>
-        <span>Message: </span><input id="msgCraft_message" onchange="thing()" />
+        <span>Message: </span><input id="msgCraft_message" />
 
         <div></div><sup>Changin the 'Action' overwrites the payload (previous payload gets logged in the console)</sup>
         <span>Payload: <button onclick="formatPayload()">Format</button></span><textarea id="msgCraft_payload"
@@ -274,8 +274,20 @@
 
       const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${quizId}/${sessionId}?username=${username}`);
 
-      wsJoin.onmessage = function (event) { 
-        appendMessage(curId, event) 
+      wsJoin.onclose = () => {
+        document.getElementById(`messageText_${curId}`).disabled = true;
+
+        const messages = document.getElementById(`messages_${curId}`)
+        const li = document.createElement("li");
+        li.innerText = "DISCONNECTED"
+        const br = document.createElement("br");
+
+        messages.insertBefore(br, messages.firstChild);
+        messages.insertBefore(li, messages.firstChild);
+      }
+
+      wsJoin.onmessage = function (event) {
+        appendMessage(curId, event)
       };
 
       sockets[curId] = { ws: wsJoin, quizId: quizId };
@@ -292,8 +304,18 @@
 
       const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
 
-      wsCreate.onmessage = function (event) { 
-        appendMessage(curId, event) 
+      wsCreate.onclose = () => {
+        document.getElementById(`messageText_${curId}`).disabled = true;
+
+        const messages = document.getElementById(`messages_${curId}`)
+        const li = document.createElement("li");
+        li.innerText = "DISCONNECTED"
+
+        messages.insertBefore(li, messages.firstChild);
+      }
+
+      wsCreate.onmessage = function (event) {
+        appendMessage(curId, event)
       };
 
       sockets[curId] = { ws: wsCreate, quizId: quizId };

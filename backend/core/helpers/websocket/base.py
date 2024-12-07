@@ -39,6 +39,7 @@ class BaseWebsocketService:
             self.actions = {
                 WebsocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
                 WebsocketActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
+                WebsocketActionEnum.SESSION_CLOSE.value: self.handle_session_close,
             }
         else:
             self.actions = actions
@@ -107,6 +108,12 @@ class BaseWebsocketService:
             logging.exception(exc)
             print(exc)
 
+    async def process(
+        self,
+        **kwargs,
+    ):
+        del kwargs
+
     async def finish(self):
         logger = logging.getLogger("quizzap")
         logger.info("Websocket Disconnect")
@@ -117,12 +124,6 @@ class BaseWebsocketService:
 
         elif self.ws.is_application_connected:
             self.manager.remove_websocket(self.ws, self.pool_id)
-
-    async def process(
-        self,
-        **kwargs,
-    ):
-        del kwargs
 
     async def handle_unautorized(self, **kwargs) -> None:
         del kwargs
@@ -197,6 +198,52 @@ class BaseWebsocketService:
             message=message,
             action=WebsocketActionEnum.POOL_MESSAGE,
             payload=packet.payload,
+        )
+
+        await self.manager.pool_packet(self.pool_id, packet)
+
+    async def handle_session_close(
+        self,
+        message: str | None = None,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        if not message:
+            message = "session is closing"
+
+        packet = BaseWebsocketPacketSchema(
+            status_code=200,
+            message=message,
+            action=WebsocketActionEnum.SESSION_CLOSE,
+        )
+
+        await self.manager.pool_packet(self.pool_id, packet)
+
+        clients = self.manager.active_pools[self.pool_id]["clients"].values()
+        for client in clients:
+            await self.handle_user_disconnect(username=client["data"]["username"])
+
+        await self.manager.pool_disconnect(self.pool_id)
+
+    async def handle_user_disconnect(
+        self,
+        username: str | None = None,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        if not username:
+            username = self.manager.getdata(self.pool_id, self.ws.id)["username"]
+
+        message = "user disconnected"
+        payload = {"username": username}
+
+        packet = BaseWebsocketPacketSchema(
+            status_code=200,
+            message=message,
+            action=WebsocketActionEnum.USER_DISCONNECT,
+            payload=payload
         )
 
         await self.manager.pool_packet(self.pool_id, packet)

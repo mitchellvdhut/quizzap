@@ -69,10 +69,10 @@ class WebSocketConnectionManager:
             print(f"manager object: {self.__dict__}")
             return
 
-        connections = [ws for ws in pool["clients"]]
-
-        for client in connections:
-            await self.disconnect(client["websocket"], pool_id)
+        clients = [i for i in pool["clients"].values()]
+        
+        for client in clients:
+            await self.disconnect(client["ws"], pool_id)
 
     async def personal_packet(
         self,

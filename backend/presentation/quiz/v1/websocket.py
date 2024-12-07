@@ -28,7 +28,7 @@ async def create_quiz_session(
 @version(1)
 async def join_quiz_session(
     websocket: WebSocket,
-    session_id: str,
+    session_id: int,
     username: str,
     quiz_id: int = Depends(get_path_quiz_id),
 ):
