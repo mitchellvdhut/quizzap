@@ -24,6 +24,11 @@ class QuizWebsocketService(BaseWebsocketService):
         actions = {
             WebsocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
             WebsocketActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
+            QuizSessionActionEnum.SUBMIT_VOTE: self.handle_action_not_implemented,
+            QuizSessionActionEnum.QUESTION_INFO: self.handle_action_not_implemented,
+            QuizSessionActionEnum.QUESTION_START: self.handle_action_not_implemented,
+            QuizSessionActionEnum.QUESTION_STOP: self.handle_action_not_implemented,
+            QuizSessionActionEnum.SCORE_INFO: self.handle_action_not_implemented,
         }
 
         super().__init__(
@@ -153,7 +158,8 @@ class QuizWebsocketService(BaseWebsocketService):
         """
         del kwargs
 
-        packet.payload["username"] = self.manager.getdata(self.pool_id, self.ws.id)["username"]
+        packet.payload["username"] = self.manager.getdata(self.pool_id, self.ws.id)[
+            "username"
+        ]
 
         await super().handle_pool_message(packet, message)
-

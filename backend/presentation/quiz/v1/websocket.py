@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, WebSocket
 
 from app.quiz.websocket.quiz import QuizWebsocketService
+from app.quiz.websocket.docs import quiz_actions
 from app.quiz.dependencies.quiz import get_path_quiz_id
+from core.helpers.websocket.dependencies.docs import parse_actions
 from core.helpers.websocket.permission.permissions import AllowAll, IsAuthenticated
 from core.versioning import version
 
@@ -37,7 +39,7 @@ async def join_quiz_session(
     )
 
 
-@quiz_websocket_router.get("/action_docs")
+@quiz_websocket_router.get("/quiz/action_docs")
 @version(1)
 async def action_docs():
-    return "WIP :)"
+    return parse_actions(quiz_actions)

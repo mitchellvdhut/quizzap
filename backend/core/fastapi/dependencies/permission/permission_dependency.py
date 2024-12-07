@@ -33,7 +33,8 @@ class PermissionDependency(SecurityBase):
     async def __call__(self, request: Request, session: Session = Depends(get_db)):
         if config.MODE == Modes.ANARCHY.value:
             logger = logging.getLogger("quizzap")
-            for _ in range(3): logger.warning("SERVER IS IN ANARCHY MODE; ALLOWING ALL REQUESTS")
+            for _ in range(3): 
+                logger.warning("SERVER IS IN ANARCHY MODE; ALLOWING ALL REQUESTS")
             return True
         
         self.curr_request = request

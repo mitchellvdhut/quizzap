@@ -21,8 +21,10 @@ class WebsocketSessionEnum(str, Enum):
 
 
 class QuizSessionActionEnum(str, Enum):
-    # When editing this, edit app\swipe_session\services\action_docs.py too
+    # When editing this, edit app\quiz\websocket\docs.py too
     SESSION_CREATED = "SESSION_CREATED"  # Respond with a new session ID 
-    SUBMIT_VOTE = "SUBMIT_VOTE"          # Send an answer vote to the session 
+    SUBMIT_VOTE = "SUBMIT_VOTE"          # Send an answer vote to the session
+    QUESTION_INFO = "QUESTION_INFO"      # Sends question info
     QUESTION_START = "QUESTION_START"    # Notify next question
     QUESTION_STOP = "QUESTION_STOP"      # Notify no question
+    SCORE_INFO = "SCORE_INFO"            # Responds with all player scores
