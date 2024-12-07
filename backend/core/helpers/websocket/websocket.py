@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 from typing import Any, Type
-from fastapi import WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 from pydantic import ValidationError
 
@@ -54,6 +54,9 @@ class WebSocketConnection:
                 logger.info(data)
 
             except asyncio.TimeoutError:
+                return None
+            
+            except WebSocketDisconnect:
                 return None
 
         else:

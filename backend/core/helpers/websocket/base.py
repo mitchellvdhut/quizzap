@@ -94,14 +94,10 @@ class BaseWebsocketService:
                             **kwargs,
                         )
 
-        except WebSocketDisconnect:
-            # Check because sometimes the exception is raised
-            # but it's already disconnected
-            if self.ws.is_client_connected:
-                await self.manager.disconnect(self.ws, self.pool_id)
+            await self.finish()
 
-            elif self.ws.is_application_connected:
-                self.manager.remove_websocket(self.ws, self.pool_id)
+        except WebSocketDisconnect:
+            await self.finish()
 
         except WebSocketException as exc:
             get_logger(exc)
@@ -110,6 +106,17 @@ class BaseWebsocketService:
             logging.info(self.active_pools.get(self.pool_id))
             logging.exception(exc)
             print(exc)
+
+    async def finish(self):
+        logger = logging.getLogger("quizzap")
+        logger.info("Websocket Disconnect")
+        # Check because sometimes the exception is raised
+        # but it's already disconnected
+        if self.ws.is_client_connected:
+            await self.manager.disconnect(self.ws, self.pool_id)
+
+        elif self.ws.is_application_connected:
+            self.manager.remove_websocket(self.ws, self.pool_id)
 
     async def process(
         self,

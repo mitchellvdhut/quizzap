@@ -1,7 +1,7 @@
 """Module containing the base websocket service for other variations to extend upon.
 """
 
-import os
+import random
 from fastapi import WebSocket
 from app.user.services.user import UserService
 from core.helpers.logger import log_exc
@@ -138,7 +138,7 @@ class QuizWebsocketService(BaseWebsocketService):
 
     async def create_session(self) -> None:
         while not self.pool_id or self.manager.active_pools.get(self.pool_id):
-            self.pool_id = os.urandom(3).hex()
+            self.pool_id = random.randint(100000, 999999)
 
     async def handle_created_session(self, session_id: str) -> None:
         packet = QuizWebsocketPacketSchema(

@@ -52,7 +52,7 @@ def get_logger(exc: Exception | str = None):
 
 
 def setup_logging(name: str):
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s\t- %(module)s - %(message)s')
+    formatter = logging.Formatter(fmt='%(levelname)s:\t%(message)s (%(module)s)')
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)

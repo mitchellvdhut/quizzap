@@ -33,9 +33,9 @@ class ActivePools(dict[str, Pool]):
         if not self.get(identifier):
             return
 
-        for client in self[identifier]["clients"]:
-            if client["ws"].id == ws.id:
-                self[identifier]["clients"].remove(client)
+        for client_id, client in self[identifier]["clients"].items():
+            if client_id == ws.id:
+                del self[identifier]["clients"][client_id]
                 break
 
         if self.get_connection_count(identifier) < 1:
