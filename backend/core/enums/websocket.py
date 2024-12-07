@@ -1,15 +1,7 @@
 from enum import Enum
 
 
-class BaseEnum(Enum):
-    pass
-
-
-class UserEnum(BaseEnum):
-    pass
-
-
-class WebsocketActionEnum(str, BaseEnum):
+class WebsocketActionEnum(str, Enum):
     STATUS_CODE = "STATUS_CODE"         # Send a HTTP like status code
     POOL_MESSAGE = "POOL_MESSAGE"       # Send a simple message to all in pool
     GLOBAL_MESSAGE = "GLOBAL_MESSAGE"   # Send a simple message to all connected
@@ -18,7 +10,7 @@ class WebsocketActionEnum(str, BaseEnum):
     SESSION_CLOSE = "SESSION_CLOSE"     # Session is closing
 
 
-class WebsocketSessionEnum(str, BaseEnum):
+class WebsocketSessionEnum(str, Enum):
     READY = "READY"             # Ready for starting internal session
     STARTING = "STARTING"       # Starting internal session
     STARTED = "STARTED"         # Started internal session, ready for connections
@@ -28,8 +20,9 @@ class WebsocketSessionEnum(str, BaseEnum):
     STOPPED = "STOPPED"         # Internal session has stopped
 
 
-class QuizSessionActionEnum(str, BaseEnum):
+class QuizSessionActionEnum(str, Enum):
     # When editing this, edit app\swipe_session\services\action_docs.py too
-    SUBMIT_VOTE = "SUBMIT_VOTE"       # Send an answer vote to the session 
-    QUESTION_START = "QUESTION_START" # Notify next question
-    QUESTION_STOP = "QUESTION_STOP"   # Notify no question
+    SESSION_CREATED = "SESSION_CREATED"  # Respond with a new session ID 
+    SUBMIT_VOTE = "SUBMIT_VOTE"          # Send an answer vote to the session 
+    QUESTION_START = "QUESTION_START"    # Notify next question
+    QUESTION_STOP = "QUESTION_STOP"      # Notify no question
