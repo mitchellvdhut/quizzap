@@ -1,45 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat</title>
+
   <style>
-    input {
-      width: 50%;
-    }
     .inputs {
       display: grid;
       grid-template-columns: 7rem 1fr;
+      gap: .2rem 1rem;
+    }
+
+    .loginputs {
+      display: grid;
+      grid-template-columns: 4rem 1fr 3rem;
+      gap: .2rem 1rem;
+    }
+
+    .copy {
+      cursor: pointer;
+      border-radius: .3rem;
+      padding: .2rem .3rem;
+    }
+
+    .copy:hover {
+      background-color: #eee;
+    }
+
+    .logs {
+      display: flex;
+      gap: 2rem;
+      flex-flow: row wrap;
+    }
+
+    .logs>div {
+      max-width: 30%;
+    }
+
+    .ws-message {
+      display: flex;
+      flex-flow: column nowrap;
+      gap: .2rem;
+      white-space: break-spaces;
+      word-wrap: break-word;
+    }
+
+    .ws-message>div {
+      display: flex;
+      flex-flow: row wrap;
+      gap: .5rem;
+      justify-content: space-between;
     }
   </style>
 </head>
 
 <body>
   <h1>WebSocket Testing</h1>
+
   <div>
     <div>
-      <h2>Connect</h2>
+      <h2>Create session</h2>
+      <span><b>Quiz Ids:</b><span id="quiz_ids"></span></span><br><br>
+      <span id="userinfo"></span><br><br>
       <div class="inputs">
-        <span>Session ID: </span><input type="text" id="itemId" autocomplete="off" value="foo" />
-        <span>Token: </span><input type="text" id="token" autocomplete="off" value="?token=bar" />
+        <span>Quiz ID: </span><input type="text" id="quizId_create" autocomplete="off" />
+        <span>Token: </span><input type="text" id="token_create" autocomplete="off" />
       </div>
-      <button onclick="connect(event)">Connect</button>
+      <button onclick="createSession(event)">Connect</button>
     </div>
+
     <hr>
+
     <div>
-      <h2>Send message</h2>
+      <h2>Connect to session</h2>
+      <span><b>Session Ids:</b><span id="session_ids"></span></span><br><br>
       <div class="inputs">
-        <span>Message: </span><input type="text" id="messageText" autocomplete="off" />
+        <span>Quiz ID: </span><input type="text" id="quizId_join" autocomplete="off" />
+        <span>Session ID: </span><input type="text" id="sessionId_join" autocomplete="off" />
+        <span>Username: </span><input type="text" id="username_join" autocomplete="off" />
       </div>
-      <button onclick="sendMessage(event)">Send</button>
+      <button onclick="joinSession(event)">Connect</button>
     </div>
+
     <hr>
-    <!-- <label>Recipe ID: <input type="text" id="recipeId" autocomplete="off" /></label><br>
-    <label>Like: <input type="checkbox" id="recipeLike"></label><br> -->
-    <button onclick="swipeMeal(event)">Send</button>
+
+    <div>
+      <h2>Craft a message</h2>
+      <div class="inputs">
+        <div></div><sup>STATUS_CODE, POOL_MESSAGE, GLOBAL_MESSAGE, USER_CONNECT, USER_DISCONNECT, SESSION_CLOSE,
+          SESSION_CREATED, SUBMIT_VOTE, QUESTION_START, QUESTION_STOP</sup>
+        <span>Action: </span><input list="actions" id="msgCraft_action" onchange="thing()" />
+        <datalist id="actions">
+          <option value="STATUS_CODE">
+          <option value="POOL_MESSAGE">
+          <option value="GLOBAL_MESSAGE">
+          <option value="USER_CONNECT">
+          <option value="USER_DISCONNECT">
+          <option value="SESSION_CLOSE">
+          <option value="SESSION_CREATED">
+          <option value="SUBMIT_VOTE">
+          <option value="QUESTION_START">
+          <option value="QUESTION_STOP">
+        </datalist>
+
+        <div></div><sup>'Message' is simply meta information, which is not used for logic</sup>
+        <span>Message: </span><input id="msgCraft_message" onchange="thing()" />
+
+        <div></div><sup>Changin the 'Action' overwrites the payload (previous payload gets logged in the console)</sup>
+        <span>Payload: <button onclick="formatPayload()">Format</button></span><textarea id="msgCraft_payload"
+          rows="4" /></textarea>
+        <button onclick="craftMessage()">Craft</button><textarea id="msgCraft_output" rows="4" /></textarea>
+      </div>
+    </div>
   </div>
-  <ul id='messages'></ul>
+
+  <hr>
+
+  <div class="logs" id="logs"></div>
+
+  <div style="height: 50vh;"></div>
+
   <script>
+    const https = true;
+    const s = https ? "s" : "";
+
     const actions = {
       STATUS_CODE: "STATUS_CODE",
       POOL_MESSAGE: "POOL_MESSAGE",
@@ -47,49 +133,344 @@
       USER_CONNECT: "USER_CONNECT",
       USER_DISCONNECT: "USER_DISCONNECT",
       SESSION_CLOSE: "SESSION_CLOSE",
+      SESSION_CREATED: "SESSION_CREATED",
       SUBMIT_VOTE: "SUBMIT_VOTE",
       QUESTION_START: "QUESTION_START",
       QUESTION_STOP: "QUESTION_STOP",
-    }
-    var ws = null;
+    };
 
-    function connect(event) {
-      var sessionId = document.getElementById("itemId").value
-      var token = document.getElementById("token").value
-      // ws = new WebSocket("wss://munchie.azurewebsites.net/api/latest/swipe_sessions/" + itemId.value + token.value);
-      ws = new WebSocket("wws://localhost/api/latest/quizzes/websocket" + sessionId + token);
-      ws.onmessage = function (event) {
-        var messages = document.getElementById('messages')
-        var message = document.createElement('li')
-        var content = document.createTextNode(event.data)
-        message.appendChild(content)
-        messages.appendChild(message)
-      };
-      event.preventDefault()
-    }
-
-    function sendMessage(event) {
-      var input = document.getElementById("messageText")
-      ws.send(input.value)
-      input.value = ''
-      event.preventDefault()
+    const actionPayloadPresets = {
+      STATUS_CODE: null,
+      POOL_MESSAGE: {
+        message: "message",
+      },
+      GLOBAL_MESSAGE: {
+        message: "message",
+      },
+      USER_CONNECT: null,
+      USER_DISCONNECT: null,
+      SESSION_CLOSE: null,
+      SUBMIT_VOTE: {
+        vote: 0
+      },
+      QUESTION_START: null,
+      QUESTION_STOP: null,
     }
 
-    function swipeMeal(event) {
-      var input = document.getElementById("recipeId")
-      var input_2 = document.getElementById("recipeLike")
-      var packet = {
-        action: actions.RECIPE_SWIPE,
-        payload: {
-          recipe_id: parseInt(input.value),
-          like: input_2.checked
-        }
+    let sockets = {};
+    let globalId = 0;
+
+    const baseUrl = "localhost";
+    const baseApi = "api/latest";
+
+    const credentials = {
+      username: "Admin",
+      password: "Admin"
+    };
+
+    async function main() {
+      initMsgCraft()
+
+      const bearerToken = await login();
+      if (!bearerToken) return;
+
+      await displayQuizIds(bearerToken);
+    }
+
+    function scanMessage(event) {
+      const packet = JSON.parse(event.data);
+
+      switch (packet.action) {
+        case actions.SESSION_CREATED:
+          updateSessionIds(packet.payload.session_id)
+          break;
+
+        default:
+          console.log("unhandled by scan:", packet);
+          break;
       }
-      console.log(JSON.stringify(packet))
-      ws.send(JSON.stringify(packet))
-      input.value = ''
-      event.preventDefault()
     }
+
+    function updateSessionIds(sessionId) {
+      const session_ids = document.getElementById('session_ids');
+
+      const span = document.createElement('span');
+      span.appendChild(document.createTextNode(sessionId));
+      span.className = "copy";
+      span.onclick = function () {
+        document.getElementById("sessionId_join").value = sessionId;
+      }
+      session_ids.appendChild(span);
+    }
+
+    function initMsgCraft() {
+      const actionInput = document.getElementById('msgCraft_action');
+
+      actionInput.addEventListener('input', updatePayload);
+      actionInput.addEventListener('propertychange', updatePayload);
+    }
+
+    function craftMessage() {
+      const actionInput = document.getElementById('msgCraft_action');
+      const messageInput = document.getElementById('msgCraft_message');
+      const payloadInput = document.getElementById('msgCraft_payload');
+      const output = document.getElementById('msgCraft_output');
+
+      const packet = {
+        action: actionInput.value,
+        message: messageInput.value,
+        payload: JSON.parse(payloadInput.value)
+      }
+
+      output.value = JSON.stringify(packet, null, 4);
+    }
+
+    function updatePayload(e) {
+      const action = e.target.value;
+      if (!actions[action]) return;
+
+      const payloadInput = document.getElementById('msgCraft_payload');
+      console.log("Previous payload:")
+      console.log(payloadInput.value)
+      console.log("End of payload :)")
+
+      payloadInput.value = JSON.stringify(actionPayloadPresets[action]);
+      formatPayload()
+    }
+
+    function formatPayload() {
+      const payloadInput = document.getElementById('msgCraft_payload');
+      payloadInput.value = JSON.stringify(JSON.parse(payloadInput.value), null, 4);
+    }
+
+    async function login() {
+      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      })
+
+      if (response.status == 401) {
+        alert('username: Admin; password: Admin; is not recognized.\nCannot prefill an access token or the quiz ids.')
+        return null;
+      }
+
+      const tokens = await response.json();
+      const accessToken = tokens.access_token;
+
+      document.getElementById("token_create").value = accessToken;
+      document.getElementById("userinfo").innerText = `Auto filled token represents user '${credentials.username}'`;
+
+      return accessToken;
+    }
+
+    function joinSession() {
+      const quizId = document.getElementById("quizId_join").value;
+      const sessionId = document.getElementById("sessionId_join").value;
+      const username = document.getElementById("username_join").value;
+
+      globalId++;
+      const curId = globalId;
+
+      const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${quizId}/${sessionId}?username=${username}`);
+
+      wsJoin.onmessage = function (event) { 
+        appendMessage(curId, event) 
+      };
+
+      sockets[curId] = { ws: wsJoin, quizId: quizId };
+
+      initMessageLog(curId, quizId, username, sessionId);
+    }
+
+    function createSession() {
+      const quizId = document.getElementById("quizId_create").value
+      const token = document.getElementById("token_create").value
+
+      globalId++;
+      const curId = globalId;
+
+      const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
+
+      wsCreate.onmessage = function (event) { 
+        appendMessage(curId, event) 
+      };
+
+      sockets[curId] = { ws: wsCreate, quizId: quizId };
+
+      // Uhh, yeah. Username doesnt work when putting in custom token (yet)
+      initMessageLog(globalId, quizId, credentials.username)
+    }
+
+    async function displayQuizIds(accessToken) {
+      const response = await fetch(`http${s}://${baseUrl}/${baseApi}/quizzes`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      })
+
+      if (response.status != 200) {
+        alert('Error retrieving quizzes');
+        return;
+      }
+
+      const quizData = await response.json();
+      var quiz_ids = document.getElementById("quiz_ids");
+
+      quizData.forEach(quiz => {
+        const span = document.createElement('span');
+        span.appendChild(document.createTextNode(quiz.id));
+        span.className = "copy";
+        span.onclick = function () {
+          document.getElementById("quizId_create").value = quiz.id;
+          document.getElementById("quizId_join").value = quiz.id;
+        }
+        quiz_ids.appendChild(span);
+      });
+
+      document.getElementById("quizId_create").value = quizData[0].id;
+      document.getElementById("quizId_join").value = quizData[0].id;
+    }
+
+    function initMessageLog(id, quizId, username, sessionId = undefined) {
+      const logs = document.getElementById('logs');
+      const logDiv = document.createElement('div');
+
+      const h3 = document.createElement('h3');
+      h3.appendChild(document.createTextNode(`ID: ${id} - QuizId: ${quizId} `));
+
+      const h2_username = document.createElement('h2');
+      h2_username.appendChild(document.createTextNode(`Username: ${username}`));
+
+      let h3_session;
+      if (sessionId) {
+        h3_session = document.createElement('h3');
+        h3_session.appendChild(document.createTextNode(`Session: ${sessionId}`));
+      }
+
+      const disconnectButton = document.createElement('button');
+      disconnectButton.appendChild(document.createTextNode('Disconnect'));
+      disconnectButton.onclick = function (event) {
+        sockets[id].ws.close(1000);
+        delete sockets[id];
+        logDiv.remove();
+      };
+      h3.appendChild(disconnectButton);
+
+      const ul = document.createElement('ul');
+      ul.id = `messages_${id}`;
+
+      const sendMsgDiv = document.createElement('div');
+      const h3_send = document.createElement('h3');
+      h3_send.appendChild(document.createTextNode('Send message'));
+
+      const h3_output = document.createElement('h3');
+      h3_output.appendChild(document.createTextNode('Output'));
+
+      const inputDiv = document.createElement('div');
+      inputDiv.className = "loginputs";
+
+      const span = document.createElement('span');
+      span.appendChild(document.createTextNode('Message:'));
+
+      const input = document.createElement('input');
+      input.type = "text";
+      input.id = "messageText_id";
+      input.autocomplete = "off";
+      input.id = `messageText_${id}`;
+
+      const sendButton = document.createElement('button');
+      sendButton.appendChild(document.createTextNode('Send'));
+      sendButton.onclick = function () { sendMessage(id); };
+
+      const hr = document.createElement('hr');
+
+      inputDiv.appendChild(span);
+      inputDiv.appendChild(input);
+      inputDiv.appendChild(sendButton);
+
+      sendMsgDiv.appendChild(h3_send);
+      sendMsgDiv.appendChild(inputDiv);
+
+      logDiv.appendChild(h3);
+      logDiv.appendChild(h2_username);
+      if (sessionId) logDiv.appendChild(h3_session);
+      logDiv.appendChild(sendMsgDiv);
+      logDiv.appendChild(h3_output);
+
+      logDiv.appendChild(hr);
+
+      logDiv.appendChild(ul);
+      logs.appendChild(logDiv);
+
+      logDiv.appendChild(hr);
+    }
+
+    function appendMessage(id, event) {
+      scanMessage(event);
+
+      data = JSON.parse(event.data)
+
+      const messages = document.getElementById(`messages_${id}`)
+      const li = document.createElement("li");
+      li.className = "ws-message";
+
+      const statusSpan = document.createElement("span");
+      statusSpan.textContent = `${data.action} | ${data.status_code}`;
+
+      li.appendChild(statusSpan);
+
+      const div = document.createElement("div");
+
+      const messageSpan = document.createElement("span");
+      messageSpan.textContent = `"${data.message}"`;
+
+      const button = document.createElement("button");
+      button.textContent = "Format";
+
+      div.appendChild(messageSpan);
+      div.appendChild(button);
+
+      li.appendChild(div);
+
+      const curId = ++globalId;
+
+      const textarea = document.createElement("textarea");
+      textarea.id = `ws-message-payload-${curId}`;
+      textarea.value = JSON.stringify(data.payload);
+
+      button.onclick = function (event) {
+        console.log("Yeah!")
+        textarea.value = JSON.stringify(JSON.parse(event.target.value), null, 4);
+      }
+
+      button.onclick = function () {
+        const txt = document.getElementById(`ws-message-payload-${curId}`);
+        txt.value = JSON.stringify(JSON.parse(txt.value), null, 4);
+      }
+
+      li.appendChild(textarea);
+
+      messages.insertBefore(li, messages.firstChild);
+    }
+
+    function sendMessage(id) {
+      ws = sockets[id];
+
+      const input = document.getElementById(`messageText_${id}`)
+
+      try {
+        packet = JSON.stringify(JSON.parse(input.value));
+      } catch (error) {
+        alert(error);
+        return
+      }
+
+      sockets[id].ws.send(packet)
+      input.value = ''
+    }
+
+    main()
   </script>
 </body>
 
