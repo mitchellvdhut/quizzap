@@ -40,7 +40,7 @@ Run the backend locally with HTTPS:
 
 1. **Generate Certificates**  
   Use this command (requires GIT installed):  
-  __Used in a Bash terminal.__
+  *Used in a Bash terminal.*
   ```bash
   "C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:4096 -keyout nginx/certs/nginx.key -out nginx/certs/nginx.crt -days 365 -nodes  
   ```
@@ -94,7 +94,7 @@ Currently, the frontend isn't Dockerized. You'll need **Node.js** installed.
 - 🛠️ **phpMyAdmin**: Manage the database effortlessly.  
 
 ### 🌐 **Frontend**  
-@Mitchell, your expertise is needed! But so far, here’s what we’ve got:  
+@Mitchell, your expertise is needed! But so far, here's what we've got:  
 - 🟢 **Node.js**: JavaScript runtime.  
 - 🚀 **Vite**: Lightning-fast development tool.  
 - 🎨 **Vue 3**: Reactive frontend framework.  
