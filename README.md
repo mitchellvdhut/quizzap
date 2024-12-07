@@ -1,91 +1,128 @@
-# Quizzap
+# 🚀 Quizzap
 
-Created and maintained by [Mitchell](https://github.com/mitchellvdhut) and [Tijmen](https://github.com/troshujin).
+🎉 A fun and free Kahoot clone, built just for the thrill of it!  
+Created and maintained by [Mitchell](https://github.com/mitchellvdhut) and [Tijmen](https://github.com/troshujin).  
 
-## About
+---
 
-This app is intended to be a kahoot clone, just for fun. (And because we don't wish to pay)
+## 🧐 About
 
-## Features
+Quizzap lets you manage quizzes, host quiz sessions, and have players join in for some epic trivia battles. Why pay for fun when you can have it for free? 😏  
+And yes, we even added an **Anarchy mode** for the rebels out there. 🔥
 
- - Manage your own quizzes.
- - Start quiz sessions.
- - Have people join quiz sessions.
- - Yeah, it's just kahoot.
- - Containerized with docker.
- - Authentication.
- - Mobile support.
- - An "Anarchy" mode if you really don't like authentication :)
+---
 
-## Run the app
+## ✨ Features
 
-After cloning the project in your preferred way.
+- 📝 **Create and manage your quizzes.**
+- 🎮 **Host quiz sessions and invite participants.**
+- 📱 **Mobile-friendly for gaming on the go.**
+- 🔒 **Secure authentication** (if you're into that sort of thing).
+- 🚫 **Anarchy Mode**: Skip authentication and embrace chaos.
+- 🐳 **Dockerized for easy deployment.**
+- 🎛️ **Custom WebSocket Manager** for real-time action.
 
-Currently, frontend is not included in the docker.
+---
 
-### Run the backend
+## 🛠️ How to Run Quizzap
 
-To run locally on https, assuming you have GIT installed, use this command in a bash terminal in the root folder:
+Follow these steps to set up Quizzap locally. 🚀  
 
-```bash
-"C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:4096 -keyout nginx/certs/nginx.key -out nginx/certs/nginx.crt -days 365 -nodes
-```
+### **Backend Setup**  
 
-Then simply run
+Run the backend locally with HTTPS:  
 
-```cmd
-docker compose up --build
-```
+1. **Generate Certificates**  
+  Use this command (requires GIT installed):  
+  ```
+  "C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:4096 -keyout nginx/certs/nginx.key -out nginx/certs/nginx.crt -days 365 -nodes  
+  ```
 
-### Run the frontend
+2. **Start the Backend**  
+  Spin it up using Docker:  
+  ```
+  docker compose up --build  
+  ```
 
-Currently the frontend is not being run by docker, sorry.
+---
 
-Use these commands to boot up the frontend, assuming you have node installed.
+### **Frontend Setup**  
 
-```cmd
-cd frontend
+Currently, the frontend isn't Dockerized. You'll need **Node.js** installed.  
 
-npm i
+1. Navigate to the `frontend` folder:  
+  ```
+  cd frontend  
+  ```
 
-npm run 
-```
+2. Install dependencies:
+  ```
+  npm i  
+  ```
 
-### Usage
+3. Start the development server:
+  ```
+  npm run
+  ``` 
 
-For the backend documentation, head to https://localhost/api/latest/docs.
+---
 
-For the quiz session testing environemnt, head to https://localhost/.
+## 🎯 Usage  
 
-For the frontend, head to http://localhost:5173/.
+- **Backend API Docs**: [https://localhost/api/latest/docs](https://localhost/api/latest/docs)  
+- **Quiz Sessions**: [https://localhost/](https://localhost/)  
+- **Frontend App**: [http://localhost:5173/](http://localhost:5173/)  
+- **phpMyAdmin**: [http://localhost:8080/](http://localhost:8080/)  
 
-For phpMyAdmin, head to http://localhost:8080/
+---
 
-## Technologies
+## ⚙️ Technologies  
 
-### Backend
+### 🖥️ **Backend**  
+- 🐍 **Python (FastAPI)**: Robust and modern backend framework.  
+- ⚡ **WebSockets**: For real-time updates.  
+- 🧩 **nginx**: HTTPS reverse proxy.  
+- 🐋 **Docker**: Containerization for easy deployment.  
+- 🛢️ **MySQL**: Reliable database solution.  
+- 🛠️ **phpMyAdmin**: Manage the database effortlessly.  
 
-#### WebAPI
+### 🌐 **Frontend**  
+@Mitchell, your expertise is needed! But so far, here’s what we’ve got:  
+- 🟢 **Node.js**: JavaScript runtime.  
+- 🚀 **Vite**: Lightning-fast development tool.  
+- 🎨 **Vue 3**: Reactive frontend framework.  
+- 🎨 **SCSS**: Enhanced CSS for styling.  
 
-- Python
-- FastAPI
-- Migrations
-- WebSockets
-- Custom Websocket Manager
-- nginx
-- https
-- Docker
+---
 
-#### Database
+## 🤝 Contribute  
 
-- MySQL
-- phpMyAdmin
+Want to make Quizzap even better? Awesome! Here's how you can help:  
 
-### Frontend
+1. Fork the repository.  
+2. Create a feature branch:  
+  ```cmd
+  git checkout -b feature-name
+  ```
 
-@mitchell help me out here
+3. Commit your changes:  
+  ```
+  git commit -m "Add your message here" 
+  ``` 
 
-- NodeJS
-- Vite
-- Vue3
-- Scss
+4. Push the branch:  
+  ```
+  git push origin feature-name
+  ```
+
+5. Open a Pull Request.
+
+---
+
+## 📜 License  
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+🚀 **Ready to start quizzing? Let's go!**
