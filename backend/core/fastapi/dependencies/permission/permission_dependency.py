@@ -35,6 +35,7 @@ class PermissionDependency(SecurityBase):
             logger = logging.getLogger("quizzap")
             for _ in range(3): 
                 logger.warning("SERVER IS IN ANARCHY MODE; ALLOWING ALL REQUESTS")
+
             return True
         
         self.curr_request = request
@@ -103,9 +104,6 @@ class PermissionDependency(SecurityBase):
         return has_permission
 
     async def is_valid_perms(self, perms: PermList) -> bool:
-        if config.MODE == Modes.ANARCHY:
-            return True
-        
         for index, perm in enumerate(perms):
             if isinstance(perm, list) or isinstance(perm, tuple):
                 if not await self.is_valid_perms(perm):

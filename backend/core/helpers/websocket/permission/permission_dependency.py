@@ -30,7 +30,7 @@ class WebsocketPermission(PermissionDependency):
         access_token: str,
         **kwargs,
     ):
-        if config.MODE == Modes.ANARCHY:
+        if config.MODE == Modes.ANARCHY.value:
             return True
         
         self.access_token = access_token

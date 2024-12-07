@@ -2,7 +2,6 @@
 Initialize app
 """
 
-import logging
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,20 +17,8 @@ from core.fastapi.middlewares import (
     AuthBackend,
     # ResponseLogMiddleware,
 )
+from core.helpers.logger import setup_logging
 from core.versioning import VersionedFastAPI
-
-
-def setup_logging(name: str):
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s\t- %(module)s - %(message)s')
-
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-
-    return logger
 
 
 def init_routers(app_: FastAPI) -> None:

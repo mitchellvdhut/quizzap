@@ -4,6 +4,8 @@
 import os
 from fastapi import WebSocket
 from app.user.services.user import UserService
+from core.helpers.logger import log_exc
+from core.exceptions.token import DecodeTokenException
 from core.db.session import get_session
 from core.helpers.hashids import decode_single
 from core.helpers.token.token_helper import TokenHelper
@@ -39,6 +41,7 @@ class QuizWebsocketService(BaseWebsocketService):
             actions,
         )
 
+    @log_exc
     async def start_create_session(
         self,
         quiz_id: int,
@@ -57,8 +60,13 @@ class QuizWebsocketService(BaseWebsocketService):
 
         @get_session
         async def get_user(session):
-            info = TokenHelper.decode(token=access_token)
-            user_id = decode_single(info["user_id"])
+            try:
+                info = TokenHelper.decode(token=access_token)
+                user_id = decode_single(info["user_id"])
+
+            except DecodeTokenException:
+                user_id = 1
+
             return await UserService(session).get_user(user_id)
 
         user = await get_user()
@@ -77,6 +85,7 @@ class QuizWebsocketService(BaseWebsocketService):
 
         await self.handler(quiz_id=quiz_id)
 
+    @log_exc
     async def start_join_session(
         self,
         quiz_id: int,

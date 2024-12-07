@@ -21,10 +21,15 @@ class WebSocketConnection:
     def id(self):
         return id(self.websocket)
 
-    async def accept(self) -> None:
+    async def accept(self, *args, **kwargs) -> None:
         if not self.accepted:
-            await self.websocket.accept()
+            await self.websocket.accept(*args, **kwargs)
             self.accepted = True
+
+    async def close(self, *args, **kwargs) -> None:
+        if self.accepted:
+            await self.websocket.close(*args, **kwargs)
+            self.accepted = False
 
     async def send(
         self,
