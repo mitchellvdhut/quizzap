@@ -8,7 +8,7 @@ Created and maintained by [Mitchell](https://github.com/mitchellvdhut) and [Tijm
 ## 🧐 About
 
 Quizzap lets you manage quizzes, host quiz sessions, and have players join in for some epic trivia battles. Why pay for fun when you can have it for free? 😏  
-And yes, we even added an **Anarchy mode** for the rebels out there. 🔥
+And yes, we even added an **Anarchy mode** for the rebels out there who really despise Authentication. 🔥
 
 ---
 
@@ -30,17 +30,24 @@ Follow these steps to set up Quizzap locally. 🚀
 
 ### **Backend Setup**  
 
+First, make sure to setup the environment variables:
+
+1. Create a `.env` file in the `backend` folder.
+2. Copy over all values from `env.example`.
+3. Change them however you see fit.
+
 Run the backend locally with HTTPS:  
 
 1. **Generate Certificates**  
   Use this command (requires GIT installed):  
-  ```
+  __Used in a Bash terminal.__
+  ```bash
   "C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:4096 -keyout nginx/certs/nginx.key -out nginx/certs/nginx.crt -days 365 -nodes  
   ```
 
 2. **Start the Backend**  
   Spin it up using Docker:  
-  ```
+  ```cmd
   docker compose up --build  
   ```
 
@@ -51,17 +58,17 @@ Run the backend locally with HTTPS:
 Currently, the frontend isn't Dockerized. You'll need **Node.js** installed.  
 
 1. Navigate to the `frontend` folder:  
-  ```
+  ```cmd
   cd frontend  
   ```
 
 2. Install dependencies:
-  ```
+  ```cmd
   npm i  
   ```
 
 3. Start the development server:
-  ```
+  ```cmd
   npm run
   ``` 
 
@@ -106,12 +113,12 @@ Want to make Quizzap even better? Awesome! Here's how you can help:
   ```
 
 3. Commit your changes:  
-  ```
+  ```cmd
   git commit -m "Add your message here" 
   ``` 
 
 4. Push the branch:  
-  ```
+  ```cmd
   git push origin feature-name
   ```
 
