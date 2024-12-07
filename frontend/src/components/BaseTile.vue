@@ -1,13 +1,15 @@
 <template>
   <div class="tile">
-    <span>1</span>
-    <span>answer</span>
+    {{ answer }}
   </div>
 </template>
 
 <script lang="ts" setup>
 
-defineProps(
+const props = defineProps({
+  answer: String
+})
+
 </script>
 
 <style lang="scss" scoped>
