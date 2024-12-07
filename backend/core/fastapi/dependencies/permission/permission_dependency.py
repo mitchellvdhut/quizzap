@@ -6,6 +6,8 @@ from fastapi.security.base import SecurityBase
 from fastapi.openapi.models import APIKey, APIKeyIn
 from sqlalchemy.orm import Session
 
+from core.enums.internal import Modes
+from core.config import config
 from core.fastapi.dependencies.permission.keyword import AND, NOT, OR, Keyword
 from core.fastapi.dependencies.database import get_db
 from core.exceptions.base import UnauthorizedException
@@ -29,6 +31,13 @@ class PermissionDependency(SecurityBase):
         self.base_perm_type = BasePermission
 
     async def __call__(self, request: Request, session: Session = Depends(get_db)):
+        if config.MODE == Modes.ANARCHY.value:
+            logger = logging.getLogger("quizzap")
+            for _ in range(3): 
+                logger.warning("SERVER IS IN ANARCHY MODE; ALLOWING ALL REQUESTS")
+
+            return True
+        
         self.curr_request = request
         self.curr_session = session
 
@@ -59,7 +68,7 @@ class PermissionDependency(SecurityBase):
                 if skip_until_or:
                     continue
 
-                has_permission = await PermissionDependency.check_permissions(perm)
+                has_permission = await self.check_permissions(perm)
                 has_permission = not has_permission if invert_next else has_permission
                 invert_next = False
                 continue
