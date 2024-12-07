@@ -4,28 +4,39 @@
       <div class="quizTile__header">
         <p>{{quizze.name}}</p>
         <div class="header_right">
-          <button class="remove_button" @click="() => onRemove(1)"><span><img src="/icons/trash_24px.png" alt="trash"></span></button>
+          <button class="remove_button" @click="() => onRemove(quizze.id)"><span><img src="/icons/trash_24px.png" alt="trash"></span></button>
         </div>
       </div>
     </div>
-    <button class="add-quiz-button" @click="addQuiz">+ Nieuwe vraag toevoegen</button>
+    <button class="add-quiz-button" @click="addQuiz">+ Nieuwe quiz toevoegen</button>
   </div>
 </template>
 
 <script lang="ts" setup>
 
-import {ref} from "vue";
-import NewQuestionTile from "@/components/NewQuestionTile.vue";
+import {onMounted, ref} from "vue";
+import {createQuiz, deleteQuiz, getQuizzes} from "@/api/quizClient";
+import type {Quiz} from "@/types";
 
-const quizzes = ref([{id: 1, name: "quiz 1"}])
+const quizzes = ref<Quiz[]>([])
 
-function onRemove(index: number) {
-  console.log('remove index', index)
+function onRemove(id: string) {
+  deleteQuiz(id)
+    .then(() => {
+      console.log("removed")
+    })
 }
 
 function addQuiz() {
-  console.log('add quiz')
+  createQuiz('new quiz', 'test')
 }
+
+onMounted(() => {
+  getQuizzes()
+    .then(quizList => {
+      quizzes.value = quizList;
+    })
+})
 </script>
 
 <style lang="scss" scoped>
