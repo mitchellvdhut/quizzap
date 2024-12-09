@@ -3,6 +3,8 @@
 🎉 A fun and free Kahoot clone, built just for the thrill of it!  
 Created and maintained by [Mitchell](https://github.com/mitchellvdhut) and [Tijmen](https://github.com/troshujin).  
 
+Note: Currently, *very* unfinished.
+
 ---
 
 ## 🧐 About
