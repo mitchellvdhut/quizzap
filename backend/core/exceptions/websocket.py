@@ -62,6 +62,12 @@ class StatusNotFoundException(CustomException):
     message = "status does not exist"
 
 
+class SessionNotFoundException(CustomException):
+    status_code = 404
+    error_status_code = "WEBSOCKET__SESSION_NOT_FOUND"
+    message = "session does not exist"
+
+
 class ActionNotFoundException(CustomException):
     status_code = 404
     error_status_code = "WEBSOCKET__ACTION_NOT_FOUND"
