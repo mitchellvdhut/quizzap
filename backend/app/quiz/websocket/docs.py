@@ -28,7 +28,7 @@ quiz_actions[QuizSessionActionEnum.QUESTION_INFO] = WebsocketDocsSchema(
     info="Action for providing question data.",
     response=ResponseWebsocketDocsSchema(
         info="Response with question data.",
-        params=WebsocketPacketParams(payload="<QuestionSchema>"),
+        params=WebsocketPacketParams(payload={"question": "<QuestionSchema>"}),
     ),
 )
 
@@ -72,5 +72,12 @@ quiz_actions[QuizSessionActionEnum.SCORE_INFO] = WebsocketDocsSchema(
                 ]
             }
         ),
+    ),
+)
+
+quiz_actions[QuizSessionActionEnum.QUIZ_END] = WebsocketDocsSchema(
+    info="Action for indicating the end of a quiz.",
+    response=ResponseWebsocketDocsSchema(
+        info="Indicates end of quiz.",
     ),
 )

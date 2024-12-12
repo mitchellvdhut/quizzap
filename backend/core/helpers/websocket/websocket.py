@@ -1,14 +1,16 @@
 import asyncio
+import datetime
 import json
 import logging
-from typing import Any, Type
+from typing import Type
+import uuid
 from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from core.enums.websocket import WebsocketActionEnum
 from core.exceptions.base import CustomException
-from core.exceptions.websocket import ActionNotFoundException, JSONSerializableException
+from core.exceptions.websocket import ActionNotImplementedException, JSONSerializableException
 from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
 
 
@@ -33,11 +35,25 @@ class WebSocketConnection:
 
     async def send(
         self,
-        data: dict[str, Any],
+        data: BaseWebsocketPacketSchema,
     ):
+        if not self.is_connected:
+            return
         print("WEBSOCKET SENDING:", data)
-        if self.is_connected:
-            await self.websocket.send_json(data)
+
+        def default(o):
+            if isinstance(o, (datetime.date, datetime.datetime)):
+                return o.isoformat()
+            
+            if isinstance(o, uuid.UUID):
+                return str(o)
+            
+            if isinstance(o, BaseModel):
+                return o.model_dump()
+
+        data = json.dumps(data, default=default)
+
+        await self.websocket.send_text(data)
 
     async def listen(
         self,
@@ -50,8 +66,9 @@ class WebSocketConnection:
                     self.websocket.receive_text(),
                     timeout=timeout,
                 )
+
                 logger = logging.getLogger("quizzap")
-                logger.info(data)
+                logger.info(f"Incoming request: {data=}")
 
             except asyncio.TimeoutError:
                 return None
@@ -70,7 +87,7 @@ class WebSocketConnection:
         try:
             packet = schema(**data_json)
         except ValidationError as exc:
-            raise ActionNotFoundException from exc
+            raise ActionNotImplementedException from exc
 
         return packet
 
@@ -88,7 +105,7 @@ class WebSocketConnection:
             payload=None,
         )
 
-        await self.send(packet.model_dump())
+        await self.send(packet)
 
     @property
     def is_connected(self):

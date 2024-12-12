@@ -12,7 +12,7 @@ from core.exceptions.base import UnauthorizedException
 
 class BaseWebsocketPermission(ABC):
     @abstractmethod
-    async def has_permission(self, pool_id: str, access_token: str, **kwargs) -> bool:
+    async def has_permission(self, pool_id: int, access_token: str, **kwargs) -> bool:
         del pool_id, access_token, kwargs
 
 

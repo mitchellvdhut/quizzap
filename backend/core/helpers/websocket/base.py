@@ -49,7 +49,7 @@ class BaseWebsocketService:
 
     async def start(
         self,
-        pool_id: str,
+        pool_id: int,
         **kwargs,
     ) -> None:
         self.pool_id = pool_id
@@ -234,7 +234,7 @@ class BaseWebsocketService:
         del kwargs
 
         if not username:
-            username = self.manager.getdata(self.pool_id, self.ws.id)["username"]
+            username = self.manager.get_client_data(self.pool_id, self.ws.id)["username"]
 
         message = "user disconnected"
         payload = {"username": username}

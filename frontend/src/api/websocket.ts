@@ -21,6 +21,7 @@ export function startWebsocket(url: string): WebsocketConnection {
     onQuestionStart: (packet) => defaultFunction<typeof packet.payload>(packet),
     onQuestionStop: (packet) => defaultFunction<typeof packet.payload>(packet),
     onScoreInfo: (packet) => defaultFunction<typeof packet.payload>(packet),
+    onQuizEnd: (packet) => defaultFunction<typeof packet.payload>(packet),
 
     sendPoolMessage: (packet) => defaultSend<typeof packet.payload>(ws, packet),
     sendGlobalMessage: (packet) => defaultSend<typeof packet.payload>(ws, packet),

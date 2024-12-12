@@ -38,6 +38,7 @@ export enum WebsocketActions {
   QUESTION_START = "QUESTION_START",
   QUESTION_STOP = "QUESTION_STOP",
   SCORE_INFO = "SCORE_INFO",
+  QUIZ_END = "QUIZ_END",
 }
 
 export interface WebsocketPacket<T> {
@@ -89,6 +90,7 @@ export interface WebsocketConnection {
   onQuestionStart: (packet: WebsocketPacket<AnswerCount>) => void;
   onQuestionStop: (packet: WebsocketPacket<null>) => void;
   onScoreInfo: (packet: WebsocketPacket<UserScore[]>) => void;
+  onQuizEnd: (packet: WebsocketPacket<null>) => void;
 
   sendPoolMessage: (packet: WebsocketPacket<Message>) => void;
   sendGlobalMessage: (packet: WebsocketPacket<Message>) => void;

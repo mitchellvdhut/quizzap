@@ -6,7 +6,7 @@ class WebsocketPacketParams(BaseModel):
     status_code: str = "integer"
     message: str = "string"
     action: str = "string"
-    payload: str | dict[str, Any] = {}
+    payload: dict[str, Any] = {}
 
 
 class RequestWebsocketDocsSchema(BaseModel):

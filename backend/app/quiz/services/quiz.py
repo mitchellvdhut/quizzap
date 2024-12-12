@@ -105,5 +105,15 @@ class QuizService:
 
         return quiz
 
+    async def get_quiz_loaded(
+        self,
+        quiz_id: int,
+    ) -> Quiz:
+        quiz = self.repo.get_by_id_loaded(quiz_id)
+        if not quiz:
+            raise QuizNotFoundException
+
+        return quiz
+
     async def get_quizzes(self) -> list[Quiz]:
         return self.repo.get()

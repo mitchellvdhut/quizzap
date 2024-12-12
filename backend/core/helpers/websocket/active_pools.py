@@ -1,3 +1,4 @@
+import logging
 from typing import Any, TypedDict
 from core.helpers.websocket.websocket import WebSocketConnection
 
@@ -11,11 +12,14 @@ class ClientConnection(TypedDict):
 class Pool(TypedDict):
     clients: dict[int, ClientConnection]
     amount: int
+    data: dict[str, Any]
 
+
+logger = logging.getLogger("quizzap")
 
 class ActivePools(dict[str, Pool]):
     def create(self, identifier: str) -> None:
-        self[identifier] = {"clients": {}, "amount": 0}
+        self[identifier] = {"clients": {}, "amount": 0, "data": {}}
 
     def append(self, identifier: str, ws: WebSocketConnection) -> None:
         if not self.get(identifier):
@@ -33,7 +37,7 @@ class ActivePools(dict[str, Pool]):
         if not self.get(identifier):
             return
 
-        for client_id, client in self[identifier]["clients"].items():
+        for client_id in self[identifier]["clients"]:
             if client_id == ws.id:
                 del self[identifier]["clients"][client_id]
                 break
@@ -41,10 +45,16 @@ class ActivePools(dict[str, Pool]):
         if self.get_connection_count(identifier) < 1:
             self.pop(identifier)
 
-    def setdata(self, pool_identifier: str, ws_identifier: int, data: dict[str, Any]):
+    def set_data(self, pool_identifier: str, data: dict[str, Any]):
+        self[pool_identifier]["data"] = data
+
+    def get_data(self, pool_identifier: str):
+        return self[pool_identifier]["data"]
+
+    def set_client_data(self, pool_identifier: str, ws_identifier: int, data: dict[str, Any]):
         self[pool_identifier]["clients"][ws_identifier]["data"] = data
 
-    def getdata(self, pool_identifier: str, ws_identifier: int):
+    def get_client_data(self, pool_identifier: str, ws_identifier: int):
         return self[pool_identifier]["clients"][ws_identifier]["data"]
 
     def get_connection_count(self, identifier: str | None = None) -> int:
