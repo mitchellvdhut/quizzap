@@ -68,7 +68,7 @@ class WebSocketConnection:
                 )
 
                 logger = logging.getLogger("quizzap")
-                logger.info(f"Incoming request: {data=}")
+                logger.info(f"Incoming request: {data}")
 
             except asyncio.TimeoutError:
                 return None

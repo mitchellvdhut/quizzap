@@ -15,27 +15,29 @@ quiz_websocket_router = APIRouter()
 @version(1)
 async def create_quiz_session(
     websocket: WebSocket,
-    token: str,
+    access_token: str,
+    client_token: str,
     quiz_id: int = Depends(get_path_quiz_id),
 ):
     await QuizWebsocketService(websocket, [IsAuthenticated]).start_create_session(
         quiz_id=quiz_id,
-        access_token=token,
+        access_token=access_token,
+        client_token=client_token,
     )
 
 
-@quiz_websocket_router.websocket("/quizJoin/{quiz_id}/{session_id}")
+@quiz_websocket_router.websocket("/quizJoin/{session_id}")
 @version(1)
 async def join_quiz_session(
     websocket: WebSocket,
     session_id: int,
     username: str,
-    quiz_id: int = Depends(get_path_quiz_id),
+    client_token: str,
 ):
     await QuizWebsocketService(websocket, [AllowAll]).start_join_session(
-        quiz_id=quiz_id,
         session_id=session_id,
         username=username,
+        client_token=client_token,
     )
 
 

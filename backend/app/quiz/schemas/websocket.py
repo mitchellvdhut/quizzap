@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TypedDict
 
 from core.db.models import Question, Quiz
+from core.enums.websocket import QuizStateEnum
 
 
 class PoolData(TypedDict):
@@ -12,12 +13,7 @@ class PoolData(TypedDict):
     question_stop: datetime | None
     is_stopping: datetime | None
     question_active: bool
-
-
-class UserScore(TypedDict):
-    username: str
-    score: int
-    streak: int
+    state: QuizStateEnum
 
 
 class UserData(TypedDict):
@@ -28,3 +24,10 @@ class UserData(TypedDict):
     score: int
     streak: int
     is_player: bool
+    client_token: str
+
+
+class UserScore(TypedDict):
+    username: str
+    score: int
+    streak: int

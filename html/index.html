@@ -272,7 +272,7 @@
       globalId++;
       const curId = globalId;
 
-      const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${quizId}/${sessionId}?username=${username}`);
+      const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${quizId}/${sessionId}?username=${username}&client_token=${crypto.randomUUID()}`);
 
       wsJoin.onclose = () => {
         document.getElementById(`messageText_${curId}`).disabled = true;
@@ -302,7 +302,7 @@
       globalId++;
       const curId = globalId;
 
-      const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?token=${token}`);
+      const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?access_token=${token}&client_token=${crypto.randomUUID()}`);
 
       wsCreate.onclose = () => {
         document.getElementById(`messageText_${curId}`).disabled = true;

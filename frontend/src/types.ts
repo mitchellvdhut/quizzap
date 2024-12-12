@@ -13,16 +13,21 @@ export interface Quiz {
 }
 
 export interface Question {
-  id?: number;
-  question: string;
+  id: string;
+  name: string;
+  description: string;
+  time_limit: number; // in seconds
   answers: Answer[];
-  answeringTimeInSeconds: number;
 }
 
 export interface Answer {
-  id?: number;
-  text: string;
-  correct: boolean;
+  id: string;
+  description: string;
+  is_correct: boolean;
+}
+
+export interface AnswerInfo {
+  answer_count: number;
 }
 
 export enum WebsocketActions {
@@ -41,7 +46,13 @@ export enum WebsocketActions {
   QUIZ_END = "QUIZ_END",
 }
 
-export interface WebsocketPacket<T> {
+export interface SendWebsocketPacket<T = null> {
+  action: WebsocketActions;
+  message: string;
+  payload?: T;
+}
+
+export interface WebsocketPacket<T = null> {
   status_code: number;
   action: WebsocketActions;
   message: string;
@@ -49,6 +60,11 @@ export interface WebsocketPacket<T> {
 }
 
 export interface Message {
+  message: string;
+}
+
+export interface ReceiveMessage {
+  username: string;
   message: string;
 }
 
@@ -80,7 +96,7 @@ export interface WebsocketConnection {
   onDefault: (packet: WebsocketPacket<unknown>) => void;
   
   onStatusCode: (packet: WebsocketPacket<null>) => void;
-  onPoolMessage: (packet: WebsocketPacket<Message>) => void;
+  onPoolMessage: (packet: WebsocketPacket<ReceiveMessage>) => void;
   onGlobalMessage: (packet: WebsocketPacket<Message>) => void;
   onUserConnect: (packet: WebsocketPacket<Username>) => void;
   onUserDisconnect: (packet: WebsocketPacket<Username>) => void;
@@ -92,10 +108,58 @@ export interface WebsocketConnection {
   onScoreInfo: (packet: WebsocketPacket<UserScore[]>) => void;
   onQuizEnd: (packet: WebsocketPacket<null>) => void;
 
-  sendPoolMessage: (packet: WebsocketPacket<Message>) => void;
-  sendGlobalMessage: (packet: WebsocketPacket<Message>) => void;
-  sendCloseSession: (packet: WebsocketPacket<null>) => void;
-  sendSubmitVote: (packet: WebsocketPacket<Vote>) => void;
-  sendQuestionStart: (packet: WebsocketPacket<null>) => void;
-  sendQuestionStop: (packet: WebsocketPacket<null>) => void;
+  sendPoolMessage: (payload: Message) => void;
+  sendCloseSession: () => void;
+  sendSubmitVote: (payload: Vote) => void;
+  sendQuestionStart: () => void;
+  sendQuestionStop: () => void;
+}
+
+export enum WebsocketState {
+  QUIZ_READY = "QUIZ_READY",
+  QUESTION_ACTIVE = "QUESTION_ACTIVE",
+  IDLE = "IDLE",
+  QUIZ_ENDED = "QUIZ_ENDED",
+  LOADING = "LOADING",
+}
+
+export enum WebsocketUserType {
+  HOST = "HOST",
+  PLAYER = "PLAYER",
+}
+
+export interface WebsocketResult<T = null> {
+  packet?: WebsocketPacket<T>;
+  ok: boolean;
+  message: string;
+}
+
+export interface WebsocketInteraction {
+  ws: WebsocketConnection;
+  state: WebsocketState;
+  userType: WebsocketUserType;
+}
+
+export interface HostWebsocketInteraction extends WebsocketInteraction {
+  closeSession: () => Promise<WebsocketResult>;
+  startNextQuestion: (useCallback: boolean) => Promise<WebsocketResult<Question>>; // returns null if useCallback is true
+  stopQuestion: () => Promise<WebsocketResult>;
+  sendChat: (message: string) => Promise<WebsocketResult<Message>>;
+}
+
+export interface HostWebsocketCallbacks {
+  onQuestionStop: () => void;
+  onChatMessage: (username: string, message: string) => void;
+  onQuestionInfo: (question: Question) => void;
+}
+
+export interface PlayerWebsocketInteraction extends WebsocketInteraction {
+  submitVote: (vote: number) => Promise<WebsocketResult>;
+  sendChat: (message: string) => Promise<WebsocketResult<Message>>;
+}
+
+export interface PlayerWebsocketCallbacks {
+  onQuestionStart: (answerInfo: AnswerInfo) => void;
+  onQuestionStop: () => void;
+  onChatMessage: (message: ReceiveMessage) => void;
 }

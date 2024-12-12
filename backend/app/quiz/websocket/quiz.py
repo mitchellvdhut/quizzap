@@ -40,7 +40,6 @@ class QuizWebsocketService(BaseWebsocketService):
     ):
         actions = {
             WebsocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
-            WebsocketActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
             WebsocketActionEnum.SESSION_CLOSE.value: self.handle_session_close,
             QuizSessionActionEnum.SUBMIT_VOTE: self.handle_sumbit_vote,
             QuizSessionActionEnum.QUESTION_START: self.handle_question_start_request,
@@ -60,6 +59,7 @@ class QuizWebsocketService(BaseWebsocketService):
         self,
         quiz_id: int,
         access_token: str,
+        client_token: str,
     ):
         await self.create_session()
         await self.manager.connect(self.ws, self.pool_id)
@@ -111,6 +111,7 @@ class QuizWebsocketService(BaseWebsocketService):
             "is_player": False,
             "vote": None,
             "voted_at": None,
+            "client_token": client_token
         }
 
         self.manager.set_data(self.pool_id, pool_data)
@@ -119,14 +120,14 @@ class QuizWebsocketService(BaseWebsocketService):
         await self.ws.status_code(SuccessfullConnection)
         await self.handle_created_session(self.pool_id)
 
-        await self.handler(quiz_id=quiz_id)
+        await self.handler()
 
     @log_exc
     async def start_join_session(
         self,
-        quiz_id: int,
         session_id: int,
         username: str,
+        client_token: str,
     ):
         self.pool_id = session_id
 
@@ -151,15 +152,28 @@ class QuizWebsocketService(BaseWebsocketService):
             "streak": 0,
             "is_player": True,
             "vote": None,
-            "voted_at": None
+            "voted_at": None,
+            "client_token": client_token
         }
+
+        new_join = True
+
+        for cl_id, client in self.manager.active_pools[self.pool_id]["clients"].items():
+            data: UserData = client["data"]
+            if data["client_token"] == client_token:
+                user_data = data
+                del self.manager.active_pools[self.pool_id]["clients"][cl_id]
+                new_join = False
+                break
 
         self.manager.set_client_data(self.pool_id, self.ws.id, user_data)
 
         await self.ws.status_code(SuccessfullConnection)
-        await self.handle_user_joined(username)
 
-        await self.handler(quiz_id=quiz_id)
+        if new_join:
+            await self.handle_user_joined(username)
+
+        await self.handler()
 
     async def process(
         self,
@@ -290,7 +304,7 @@ class QuizWebsocketService(BaseWebsocketService):
             status_code=200,
             action=QuizSessionActionEnum.QUESTION_INFO,
             message="retrieved question information",
-            payload={"question": question_schema},
+            payload=question_schema.model_dump(),
         )
 
         await self.ws.send(packet)

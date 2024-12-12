@@ -29,3 +29,9 @@ class QuizSessionActionEnum(str, Enum):
     QUESTION_STOP = "QUESTION_STOP"      # Notify no question
     SCORE_INFO = "SCORE_INFO"            # Responds with all player scores
     QUIZ_END = "QUIZ_END"                # Indicate the end of the quiz
+
+
+class QuizStateEnum(str, Enum):
+    READY = "READY"
+    IN_PROGRESS = "IN_PROGRESS"
+    FINISHED = "FINISHED"
