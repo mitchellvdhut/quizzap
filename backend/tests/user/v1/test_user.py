@@ -17,7 +17,6 @@ async def test_get_users_as_admin(
 async def test_get_users_as_user(
     client: AsyncClient, normal_user_token_headers: dict[str, str]
 ):
-
     res = await client.get("/api/v1/users", headers=normal_user_token_headers)
     assert res.status_code == 401
 

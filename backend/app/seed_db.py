@@ -27,29 +27,7 @@ def seed_normal_db():  # pragma: no cover
         
         quiz = session.query(Quiz).where(Quiz.name == "The Greg quiz!").first()
         if not quiz:
-            quiz = Quiz(
-                name="The Greg quiz!",
-                description="The one and only!",
-                creator=admin
-            )
-
-            question_1 = Question(
-                    name="Important Greg question",
-                    description="Is greg disappointed?"
-                )
-
-            question_1_answer_1 = Answer(
-                        description="Yes",
-                        is_correct=True
-                    )
-            question_1_answer_2 = Answer(
-                        description="No"
-                    )
-            
-            question_1.answers.append(question_1_answer_1)
-            question_1.answers.append(question_1_answer_2)
-            
-            quiz.questions.append(question_1)
+            quiz = greg_quiz(admin)
 
             session.add(quiz)
 
@@ -87,8 +65,38 @@ def seed_test_db():
             password=get_password_hash("normal_user")
         )
 
-        session.add_all([admin_user, normal_user])
+        quiz = greg_quiz(admin_user)
+
+        session.add_all([admin_user, normal_user, quiz])
         session.commit()
 
     # needed to call this because test.db couldnt be deleted anymore
     engine.dispose()
+
+
+def greg_quiz(admin: User):
+    quiz = Quiz(
+        name="The Greg quiz!",
+        description="The one and only!",
+        creator=admin
+    )
+
+    question_1 = Question(
+            name="Important Greg question",
+            description="Is greg disappointed?"
+        )
+
+    question_1_answer_1 = Answer(
+                description="Yes",
+                is_correct=True
+            )
+    question_1_answer_2 = Answer(
+                description="No"
+            )
+    
+    question_1.answers.append(question_1_answer_1)
+    question_1.answers.append(question_1_answer_2)
+    
+    quiz.questions.append(question_1)
+
+    return quiz

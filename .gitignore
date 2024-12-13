@@ -1,3 +1,4 @@
 
 nginx/certs/nginx.key
 nginx/certs/nginx.crt
+test.db

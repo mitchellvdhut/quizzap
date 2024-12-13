@@ -2,6 +2,7 @@
 """
 
 from datetime import datetime, timedelta
+import logging
 import random
 from fastapi import WebSocket
 from app.user.services.user import UserService
@@ -54,6 +55,9 @@ class QuizWebsocketService(BaseWebsocketService):
             actions,
         )
 
+        logger = logging.getLogger("quizzer")
+        logger.info("Initializing!")
+
     @log_exc
     async def start_create_session(
         self,
@@ -61,6 +65,8 @@ class QuizWebsocketService(BaseWebsocketService):
         access_token: str,
         client_token: str,
     ):
+        logger = logging.getLogger("quizzer")
+        logger.info("Creating!")
         await self.create_session()
         await self.manager.connect(self.ws, self.pool_id)
 
@@ -117,6 +123,7 @@ class QuizWebsocketService(BaseWebsocketService):
         self.manager.set_data(self.pool_id, pool_data)
         self.manager.set_client_data(self.pool_id, self.ws.id, user_data)
 
+        logger.info("Sending!")
         await self.ws.status_code(SuccessfullConnection)
         await self.handle_created_session(self.pool_id)
 
