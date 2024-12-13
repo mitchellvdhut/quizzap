@@ -517,3 +517,11 @@ class QuizWebsocketService(BaseWebsocketService):
             self.manager.get_client_data(self.pool_id, websocket_id).get("is_admin")
             is True
         )
+ 
+    async def handle_disconnect(
+        self,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        self.manager.active_pools[self.pool_id]["clients"][self.ws.id]["ws"] = None

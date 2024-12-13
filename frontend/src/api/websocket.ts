@@ -63,6 +63,7 @@ export function startWebsocket(url: string): WebsocketConnection {
     const packet: SendWebsocketPacket = {
       action: WebsocketActions.SESSION_CLOSE,
       message: "closing session",
+      payload: null,
     }
 
     defaultSend(websocket.socket, packet);
@@ -82,6 +83,7 @@ export function startWebsocket(url: string): WebsocketConnection {
     const packet: SendWebsocketPacket = {
       action: WebsocketActions.QUESTION_START,
       message: "requesting new question",
+      payload: null,
     }
 
     defaultSend(websocket.socket, packet);
@@ -91,6 +93,7 @@ export function startWebsocket(url: string): WebsocketConnection {
     const packet: SendWebsocketPacket = {
       action: WebsocketActions.QUESTION_STOP,
       message: "stopping question",
+      payload: null,
     }
 
     defaultSend(websocket.socket, packet);

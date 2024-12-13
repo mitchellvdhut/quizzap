@@ -32,7 +32,7 @@ class Config:
     JWT_ALGORITHM: str = "HS256"
 
     HASH_ID_SALT: str = os.getenv("HASH_ID_SALT") or "salt"
-    HASH_ID_MIN_LENGTH: int = os.getenv("HASH_ID_MIN_LENGTH") or 4
+    HASH_ID_MIN_LENGTH: int = int(os.getenv("HASH_ID_MIN_LENGTH") or "4")
 
     MODE: str = os.getenv("MODE") or "normal"
 

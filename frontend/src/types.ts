@@ -49,7 +49,7 @@ export enum WebsocketActions {
 export interface SendWebsocketPacket<T = null> {
   action: WebsocketActions;
   message: string;
-  payload?: T;
+  payload: T;
 }
 
 export interface WebsocketPacket<T = null> {

@@ -33,13 +33,26 @@ class WebSocketConnection:
             await self.websocket.close(*args, **kwargs)
             self.accepted = False
 
+    def disconnect(self) -> None:
+        self.close()
+        self.websocket = None
+        self.accepted = False
+
+    def reconnect(self, websocket: WebSocket):
+        self.websocket = websocket
+        self.accept()
+
     async def send(
         self,
         data: BaseWebsocketPacketSchema,
     ):
+        logger = logging.getLogger("quizzap")
+
         if not self.is_connected:
+            logger.warning("Trying to send to disconnected websocket")
             return
-        print("WEBSOCKET SENDING:", data)
+        
+        logger.info(f"Websocket Sending: {data}")
 
         def default(o):
             if isinstance(o, (datetime.date, datetime.datetime)):

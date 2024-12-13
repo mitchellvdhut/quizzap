@@ -95,10 +95,10 @@ class BaseWebsocketService:
                             **kwargs,
                         )
 
-            await self.finish()
+            await self.handle_disconnect()
 
         except WebSocketDisconnect:
-            await self.finish()
+            await self.handle_disconnect()
 
         except WebSocketException as exc:
             get_logger(exc)
@@ -114,7 +114,12 @@ class BaseWebsocketService:
     ):
         del kwargs
 
-    async def finish(self):
+    async def handle_disconnect(
+        self,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
         logger = logging.getLogger("quizzap")
         logger.info("Websocket Disconnect")
         # Check because sometimes the exception is raised
