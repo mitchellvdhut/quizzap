@@ -11,9 +11,7 @@ async def test_get_me_no_auth(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_me(client: AsyncClient, normal_user_token_headers: dict[str, str]):
-    user_headers = await normal_user_token_headers
-
-    response_me = await client.get("/api/v1/me", headers=user_headers)
+    response_me = await client.get("/api/v1/me", headers=normal_user_token_headers)
     assert response_me.status_code == 200, "Login failure"
 
 
@@ -25,14 +23,12 @@ async def test_update_me_no_auth(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_update_me(client: AsyncClient, normal_user_token_headers: dict[str, str]):
-    user_headers = await normal_user_token_headers
-
-    response = await client.patch("/api/v1/me", headers=user_headers, json={"username": "Turtle", "password": "stew"})
+    response = await client.patch("/api/v1/me", headers=normal_user_token_headers, json={"username": "Turtle", "password": "stew"})
     data = response.json()
     assert data.get("username")
     assert response.status_code == 200
 
-    response = await client.patch("/api/v1/me", headers=user_headers, json={"username": "normal_user", "password": "normal_user"})
+    response = await client.patch("/api/v1/me", headers=normal_user_token_headers, json={"username": "normal_user", "password": "normal_user"})
     assert response.status_code == 200
 
 
