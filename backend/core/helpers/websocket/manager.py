@@ -130,3 +130,23 @@ class WebSocketConnectionManager:
         websocket_id: int,
     ) -> dict[str, Any]:
         return self.active_pools.get_client_data(pool_id, websocket_id)
+
+    def garbage_collector(
+        self, 
+        pool_id: str | None = None,
+    ) -> None:
+        if pool_id:
+            for _, client in self.active_pools[pool_id]["clients"].items():
+                if client["ws"].is_connected:
+                    break
+            else:
+                self.active_pools.remove_pool(pool_id)
+            
+            return
+        
+        for pool_id in self.active_pools:
+            for _, client in self.active_pools[pool_id]["clients"].items():
+                if client["ws"].is_connected:
+                    break
+            else:
+                self.active_pools.remove_pool(pool_id)

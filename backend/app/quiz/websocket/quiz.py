@@ -25,6 +25,7 @@ from core.exceptions.websocket import (
     RequestSuccessful,
     SessionNotFoundException,
     SuccessfullConnection,
+    UsernameTakenException,
 )
 from core.helpers.websocket import manager
 from core.enums.websocket import QuizSessionActionEnum, WebsocketActionEnum
@@ -65,8 +66,6 @@ class QuizWebsocketService(BaseWebsocketService):
         access_token: str,
         client_token: str,
     ):
-        logger = logging.getLogger("quizzer")
-        logger.info("Creating!")
         await self.create_session()
         await self.manager.connect(self.ws, self.pool_id)
 
@@ -117,13 +116,12 @@ class QuizWebsocketService(BaseWebsocketService):
             "is_player": False,
             "vote": None,
             "voted_at": None,
-            "client_token": client_token
+            "client_token": client_token,
         }
 
         self.manager.set_data(self.pool_id, pool_data)
         self.manager.set_client_data(self.pool_id, self.ws.id, user_data)
 
-        logger.info("Sending!")
         await self.ws.status_code(SuccessfullConnection)
         await self.handle_created_session(self.pool_id)
 
@@ -145,40 +143,53 @@ class QuizWebsocketService(BaseWebsocketService):
             await self.manager.disconnect(self.ws, self.pool_id)
             return
 
-        await self.manager.connect(self.ws, self.pool_id)
-
         if not await self.manager.check_auth(*self.perms):
+            await self.manager.connect(self.ws, self.pool_id)
             await self.handle_unautorized()
             await self.manager.disconnect(self.ws, self.pool_id)
             return
 
-        user_data: UserData = {
-            "username": username,
-            "is_admin": False,
-            "score": 0,
-            "streak": 0,
-            "is_player": True,
-            "vote": None,
-            "voted_at": None,
-            "client_token": client_token
-        }
-
-        new_join = True
 
         for cl_id, client in self.manager.active_pools[self.pool_id]["clients"].items():
-            data: UserData = client["data"]
-            if data["client_token"] == client_token:
-                user_data = data
-                del self.manager.active_pools[self.pool_id]["clients"][cl_id]
-                new_join = False
-                break
+            user_data: UserData = client["data"]
+            if not (user_data["client_token"] == client_token):
+                continue
 
-        self.manager.set_client_data(self.pool_id, self.ws.id, user_data)
+            await client["ws"].reconnect(self.ws.websocket)
+            self.ws = client["ws"]
 
-        await self.ws.status_code(SuccessfullConnection)
+            old = self.manager.active_pools[self.pool_id]["clients"][cl_id]
+            del self.manager.active_pools[self.pool_id]["clients"][cl_id]
+            self.manager.active_pools[self.pool_id]["clients"][self.ws.id] = old
 
-        if new_join:
-            await self.handle_user_joined(username)
+            await self.handle_user_reconnect(payload={"username": user_data["username"]})
+
+            break
+
+        else:
+            for cl_id, client in self.manager.active_pools[self.pool_id]["clients"].items():
+                user_data: UserData = client["data"]
+                if user_data["username"].lower() == username.lower():
+                    await self.manager.connect(self.ws, self.pool_id)
+                    await self.ws.status_code(UsernameTakenException)
+                    await self.manager.disconnect(self.ws, self.pool_id)
+                    return
+
+            user_data: UserData = {
+                "username": username,
+                "is_admin": False,
+                "score": 0,
+                "streak": 0,
+                "is_player": True,
+                "vote": None,
+                "voted_at": None,
+                "client_token": client_token,
+            }    
+
+            await self.manager.connect(self.ws, self.pool_id)
+            self.manager.set_client_data(self.pool_id, self.ws.id, user_data)
+            await self.ws.status_code(SuccessfullConnection)
+            await self.handle_user_connect(payload={"username": username})
 
         await self.handler()
 
@@ -220,19 +231,6 @@ class QuizWebsocketService(BaseWebsocketService):
                 await self.handle_question_end()
 
         self.manager.set_data(self.pool_id, data)
-
-    async def handle_user_joined(
-        self,
-        username: str,
-    ) -> None:
-        packet = QuizWebsocketPacketSchema(
-            status_code=100,
-            action=WebsocketActionEnum.USER_CONNECT,
-            message="user has connected",
-            payload={"username": username},
-        )
-
-        await self.manager.pool_packet(self.pool_id, packet)
 
     async def handle_session_not_found(self) -> None:
         await self.ws.status_code(SessionNotFoundException)
@@ -524,11 +522,39 @@ class QuizWebsocketService(BaseWebsocketService):
             self.manager.get_client_data(self.pool_id, websocket_id).get("is_admin")
             is True
         )
- 
+
     async def handle_disconnect(
         self,
         **kwargs,
     ) -> None:
         del kwargs
 
-        self.manager.active_pools[self.pool_id]["clients"][self.ws.id]["ws"] = None
+        data: UserData = self.manager.get_client_data(self.pool_id, self.ws.id)
+
+        await self.ws.disconnect()
+        await self.handle_user_disconnect(payload={"username": data["username"]})
+
+        self.manager.garbage_collector(self.pool_id)
+
+    async def handle_user_reconnect(
+        self,
+        message: str | None = None,
+        payload: dict[str, str] | None = None,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        if not message:
+            message = "user has reconnected"
+
+        packet = QuizWebsocketPacketSchema(
+            status_code=100,
+            action=QuizSessionActionEnum.USER_RECONNECT,
+            message=message,
+            payload=payload,
+        )
+
+        logger = logging.getLogger("quizzap")
+        logger.info(self.manager.active_pools)
+
+        await self.manager.pool_packet(self.pool_id, packet)

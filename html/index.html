@@ -13,6 +13,11 @@
       gap: .2rem 1rem;
     }
 
+    .inputs>span {
+      display: flex;
+      flex-flow: row nowrap;
+    }
+
     .loginputs {
       display: grid;
       grid-template-columns: 4rem 1fr 3rem;
@@ -36,7 +41,7 @@
     }
 
     .logs>div {
-      max-width: 30%;
+      min-width: 30%;
     }
 
     .ws-message {
@@ -67,6 +72,8 @@
       <div class="inputs">
         <span>Quiz ID: </span><input type="text" id="quizId_create" autocomplete="off" />
         <span>Token: </span><input type="text" id="token_create" autocomplete="off" />
+        <span>ClientToken: <button onclick="generateToken('clientToken_create')">Gen</button></span><input type="text"
+          id="clientToken_create" autocomplete="off" />
       </div>
       <button onclick="createSession(event)">Connect</button>
     </div>
@@ -80,6 +87,8 @@
         <span>Quiz ID: </span><input type="text" id="quizId_join" autocomplete="off" />
         <span>Session ID: </span><input type="text" id="sessionId_join" autocomplete="off" />
         <span>Username: </span><input type="text" id="username_join" autocomplete="off" />
+        <span>ClientToken: <button onclick="generateToken('clientToken_join')">Gen</button></span><input type="text"
+          id="clientToken_join" autocomplete="off" />
       </div>
       <button onclick="joinSession(event)">Connect</button>
     </div>
@@ -174,14 +183,18 @@
       const bearerToken = await login();
       if (!bearerToken) return;
 
+      generateToken("clientToken_create");
+      generateToken("clientToken_join");
+
       await displayQuizIds(bearerToken);
     }
 
-    function scanMessage(event) {
+    function scanMessage(id, event) {
       const packet = JSON.parse(event.data);
 
       switch (packet.action) {
         case actions.SESSION_CREATED:
+          sockets[id].sessionId = packet.payload.session_id;
           updateSessionIds(packet.payload.session_id)
           break;
 
@@ -264,15 +277,51 @@
       return accessToken;
     }
 
-    function joinSession() {
-      const quizId = document.getElementById("quizId_join").value;
-      const sessionId = document.getElementById("sessionId_join").value;
-      const username = document.getElementById("username_join").value;
+    function generateToken(id, token = undefined) {
+      const clientToken = token ?? crypto.randomUUID();
+      document.getElementById(id).value = clientToken;
+    }
+
+    function createSession() {
+      const quizId = document.getElementById("quizId_create").value
+      const token = document.getElementById("token_create").value
+      const clientToken = document.getElementById("clientToken_create").value
 
       globalId++;
       const curId = globalId;
 
-      const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${quizId}/${sessionId}?username=${username}&client_token=${crypto.randomUUID()}`);
+      const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?access_token=${token}&client_token=${clientToken}`);
+
+      wsCreate.onclose = () => {
+        document.getElementById(`messageText_${curId}`).disabled = true;
+
+        const messages = document.getElementById(`messages_${curId}`)
+        const li = document.createElement("li");
+        li.innerText = "DISCONNECTED"
+
+        messages.insertBefore(li, messages.firstChild);
+      }
+
+      wsCreate.onmessage = function (event) {
+        appendMessage(curId, event)
+      };
+
+      sockets[curId] = { ws: wsCreate, quizId: quizId, sessionId: null };
+
+      generateToken("clientToken_create");
+      initMessageLog(globalId, quizId, credentials.username, clientToken)
+    }
+
+    function joinSession(event, overwriteId = undefined) {
+      const quizId = document.getElementById("quizId_join").value;
+      const sessionId = document.getElementById("sessionId_join").value;
+      const username = document.getElementById("username_join").value;
+      const clientToken = document.getElementById("clientToken_join").value;
+
+      globalId++;
+      const curId = overwriteId ?? globalId;
+
+      const wsJoin = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizJoin/${sessionId}?username=${username}&client_token=${clientToken}`);
 
       wsJoin.onclose = () => {
         document.getElementById(`messageText_${curId}`).disabled = true;
@@ -290,38 +339,15 @@
         appendMessage(curId, event)
       };
 
-      sockets[curId] = { ws: wsJoin, quizId: quizId };
+      generateToken("clientToken_join");
 
-      initMessageLog(curId, quizId, username, sessionId);
-    }
-
-    function createSession() {
-      const quizId = document.getElementById("quizId_create").value
-      const token = document.getElementById("token_create").value
-
-      globalId++;
-      const curId = globalId;
-
-      const wsCreate = new WebSocket(`ws${s}://${baseUrl}/${baseApi}/sockets/quizCreate/${quizId}?access_token=${token}&client_token=${crypto.randomUUID()}`);
-
-      wsCreate.onclose = () => {
-        document.getElementById(`messageText_${curId}`).disabled = true;
-
-        const messages = document.getElementById(`messages_${curId}`)
-        const li = document.createElement("li");
-        li.innerText = "DISCONNECTED"
-
-        messages.insertBefore(li, messages.firstChild);
+      if (overwriteId) {
+        document.getElementById(`messageText_${curId}`).disabled = false;
+        sockets[curId].ws = wsJoin;
+      } else {
+        sockets[curId] = { ws: wsJoin, quizId: quizId, sessionId: sessionId };
+        initMessageLog(curId, quizId, username, clientToken, sessionId);
       }
-
-      wsCreate.onmessage = function (event) {
-        appendMessage(curId, event)
-      };
-
-      sockets[curId] = { ws: wsCreate, quizId: quizId };
-
-      // Uhh, yeah. Username doesnt work when putting in custom token (yet)
-      initMessageLog(globalId, quizId, credentials.username)
     }
 
     async function displayQuizIds(accessToken) {
@@ -354,7 +380,7 @@
       document.getElementById("quizId_join").value = quizData[0].id;
     }
 
-    function initMessageLog(id, quizId, username, sessionId = undefined) {
+    function initMessageLog(id, quizId, username, clientToken, sessionId = undefined) {
       const logs = document.getElementById('logs');
       const logDiv = document.createElement('div');
 
@@ -364,18 +390,52 @@
       const h2_username = document.createElement('h2');
       h2_username.appendChild(document.createTextNode(`Username: ${username}`));
 
+
+      const span_ct = document.createElement('span');
+      span_ct.appendChild(document.createTextNode(clientToken));
+      span_ct.className = "copy";
+      span_ct.onclick = function () {
+        document.getElementById("clientToken_create").value = clientToken;
+        document.getElementById("clientToken_join").value = clientToken;
+      }
+
       let h3_session;
       if (sessionId) {
         h3_session = document.createElement('h3');
         h3_session.appendChild(document.createTextNode(`Session: ${sessionId}`));
       }
 
+      const removeButton = document.createElement('button');
+      removeButton.appendChild(document.createTextNode('Remove'));
+      removeButton.onclick = function (event) {
+        delete sockets[id];
+        logDiv.remove();
+      };
+
+      const reconnectButton = document.createElement('button'); 
+      reconnectButton.appendChild(document.createTextNode('Reconnect'));
+      reconnectButton.onclick = function (event) {
+        reconnectButton.remove();
+        removeButton.remove()
+
+        document.getElementById("sessionId_join").value = sockets[id].sessionId;
+        document.getElementById("clientToken_join").value = clientToken;
+        joinSession("", id);
+        
+        generateToken("clientToken_join");
+
+        h3.appendChild(disconnectButton);
+      };
+
       const disconnectButton = document.createElement('button');
       disconnectButton.appendChild(document.createTextNode('Disconnect'));
       disconnectButton.onclick = function (event) {
         sockets[id].ws.close(1000);
-        delete sockets[id];
-        logDiv.remove();
+        sockets[id].ws = null;
+        disconnectButton.remove();
+
+        h3.appendChild(reconnectButton);
+        h3.appendChild(removeButton);
       };
       h3.appendChild(disconnectButton);
 
@@ -416,6 +476,7 @@
 
       logDiv.appendChild(h3);
       logDiv.appendChild(h2_username);
+      logDiv.appendChild(span_ct);
       if (sessionId) logDiv.appendChild(h3_session);
       logDiv.appendChild(sendMsgDiv);
       logDiv.appendChild(h3_output);
@@ -429,7 +490,7 @@
     }
 
     function appendMessage(id, event) {
-      scanMessage(event);
+      scanMessage(id, event);
 
       data = JSON.parse(event.data)
 

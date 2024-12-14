@@ -79,6 +79,12 @@ class AlreadyVotedException(CustomException):
     message = "you have already voted on this question"
 
 
+class UsernameTakenException(CustomException):
+    status_code = 409
+    error_status_code = "WEBSOCKET__USERNAME_TAKEN"
+    message = "username was already taken"
+
+
 class AccessDeniedException(CustomException):
     status_code = 403
     error_status_code = "WEBSOCKET__ACCESS_DENIED"

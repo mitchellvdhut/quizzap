@@ -33,6 +33,12 @@ class ActivePools(dict[str, Pool]):
             "data": {}
         }
 
+    def remove_pool(self, identifier: str) -> None:
+        if not self.get(identifier):
+            return
+        
+        self.pop(identifier)
+
     def remove(self, identifier: str, ws: WebSocketConnection) -> None:
         if not self.get(identifier):
             return

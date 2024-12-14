@@ -44,9 +44,6 @@ class BaseWebsocketService:
         else:
             self.actions = actions
 
-    async def initialize(self):
-        await self.ws.accept()
-
     async def start(
         self,
         pool_id: int,
@@ -120,8 +117,6 @@ class BaseWebsocketService:
     ) -> None:
         del kwargs
 
-        logger = logging.getLogger("quizzap")
-        logger.info("Websocket Disconnect")
         # Check because sometimes the exception is raised
         # but it's already disconnected
         if self.ws.is_client_connected:
@@ -129,6 +124,8 @@ class BaseWebsocketService:
 
         elif self.ws.is_application_connected:
             self.manager.remove_websocket(self.ws, self.pool_id)
+
+        await self.handle_user_disconnect()
 
     async def handle_unautorized(self, **kwargs) -> None:
         del kwargs
@@ -210,6 +207,7 @@ class BaseWebsocketService:
     async def handle_session_close(
         self,
         message: str | None = None,
+        # payload: dict[str, str] | None = None,
         **kwargs,
     ) -> None:
         del kwargs
@@ -221,34 +219,53 @@ class BaseWebsocketService:
             status_code=200,
             message=message,
             action=WebsocketActionEnum.SESSION_CLOSE,
+            # payload=payload
         )
 
         await self.manager.pool_packet(self.pool_id, packet)
 
         clients = self.manager.active_pools[self.pool_id]["clients"].values()
         for client in clients:
-            await self.handle_user_disconnect(username=client["data"]["username"])
+            await self.handle_user_disconnect(payload={"username": client["data"]["username"]})
 
         await self.manager.pool_disconnect(self.pool_id)
 
     async def handle_user_disconnect(
         self,
-        username: str | None = None,
+        message: str | None = None,
+        payload: dict[str, str] | None = None,
         **kwargs,
     ) -> None:
         del kwargs
 
-        if not username:
-            username = self.manager.get_client_data(self.pool_id, self.ws.id)["username"]
-
-        message = "user disconnected"
-        payload = {"username": username}
+        if not message:
+            message = "user disconnected"
 
         packet = BaseWebsocketPacketSchema(
             status_code=200,
             message=message,
             action=WebsocketActionEnum.USER_DISCONNECT,
-            payload=payload
+            payload=payload,
+        )
+
+        await self.manager.pool_packet(self.pool_id, packet)
+
+    async def handle_user_connect(
+        self,
+        message: str | None = None,
+        payload: dict[str, str] | None = None,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        if not message:
+            message = "user has connected"
+
+        packet = BaseWebsocketPacketSchema(
+            status_code=100,
+            action=WebsocketActionEnum.USER_CONNECT,
+            message=message,
+            payload=payload,
         )
 
         await self.manager.pool_packet(self.pool_id, packet)

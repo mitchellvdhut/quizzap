@@ -10,7 +10,10 @@ from pydantic import BaseModel, ValidationError
 
 from core.enums.websocket import WebsocketActionEnum
 from core.exceptions.base import CustomException
-from core.exceptions.websocket import ActionNotImplementedException, JSONSerializableException
+from core.exceptions.websocket import (
+    ActionNotImplementedException,
+    JSONSerializableException,
+)
 from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
 
 
@@ -18,6 +21,7 @@ class WebSocketConnection:
     def __init__(self, websocket: WebSocket):
         self.websocket = websocket
         self.accepted = False
+        self.disconnected = False
 
     @property
     def id(self):
@@ -29,18 +33,20 @@ class WebSocketConnection:
             self.accepted = True
 
     async def close(self, *args, **kwargs) -> None:
-        if self.accepted:
+        if self.accepted and self.is_connected:
             await self.websocket.close(*args, **kwargs)
             self.accepted = False
 
-    def disconnect(self) -> None:
-        self.close()
+    async def disconnect(self, *args, **kwargs) -> None:
+        await self.close(*args, **kwargs)
         self.websocket = None
         self.accepted = False
+        self.disconnected = True
 
-    def reconnect(self, websocket: WebSocket):
+    async def reconnect(self, websocket: WebSocket, *args, **kwargs):
         self.websocket = websocket
-        self.accept()
+        self.disconnected = False
+        await self.accept(*args, **kwargs)
 
     async def send(
         self,
@@ -51,16 +57,16 @@ class WebSocketConnection:
         if not self.is_connected:
             logger.warning("Trying to send to disconnected websocket")
             return
-        
+
         logger.info(f"Websocket Sending: {data}")
 
         def default(o):
             if isinstance(o, (datetime.date, datetime.datetime)):
                 return o.isoformat()
-            
+
             if isinstance(o, uuid.UUID):
                 return str(o)
-            
+
             if isinstance(o, BaseModel):
                 return o.model_dump()
 
@@ -73,6 +79,11 @@ class WebSocketConnection:
         schema: Type[BaseWebsocketPacketSchema],
         timeout: float | None = None,
     ) -> BaseWebsocketPacketSchema | None:
+        if self.disconnected:
+            logger = logging.getLogger("quizzap")
+            logger.warning("Trying to listen to disconnected websocket")
+            return
+
         if timeout:
             try:
                 data = await asyncio.wait_for(
@@ -85,7 +96,7 @@ class WebSocketConnection:
 
             except asyncio.TimeoutError:
                 return None
-            
+
             except WebSocketDisconnect:
                 return None
 
@@ -122,13 +133,22 @@ class WebSocketConnection:
 
     @property
     def is_connected(self):
-        return self.websocket.client_state == WebSocketState.CONNECTED and self.websocket.application_state == WebSocketState.CONNECTED
+        return (
+            not self.disconnected
+            and self.websocket.client_state == WebSocketState.CONNECTED
+            and self.websocket.application_state == WebSocketState.CONNECTED
+        )
 
     @property
     def is_client_connected(self):
-        return self.websocket.client_state == WebSocketState.CONNECTED
+        return (
+            not self.disconnected
+            and self.websocket.client_state == WebSocketState.CONNECTED
+        )
 
     @property
     def is_application_connected(self):
-        return self.websocket.application_state == WebSocketState.CONNECTED
-    
+        return (
+            not self.disconnected
+            and self.websocket.application_state == WebSocketState.CONNECTED
+        )
