@@ -3,16 +3,13 @@ import pytest
 
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from httpx import AsyncClient
+import pytest_asyncio
 
 load_dotenv()
 os.environ["ENV"] = "test"
 
 from app.server import app  # noqa: E402
-from core.db import Base  # noqa: E402
-from core.config import config  # noqa: E402
-from tests.seed_test_db import seed_db  # noqa: E402
 
 
 @pytest.fixture()
@@ -25,7 +22,7 @@ def client():
     return AsyncClient(app=app, base_url="http://test")
 
 
-@pytest.fixture()
+@pytest_asyncio.fixture
 async def admin_token_headers(client: AsyncClient) -> dict[str, str]:
     login_data = {
         "username": "admin",
@@ -41,7 +38,7 @@ async def admin_token_headers(client: AsyncClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {access_token}"}
 
 
-@pytest.fixture()
+@pytest_asyncio.fixture
 async def normal_user_token_headers(client: AsyncClient) -> dict[str, str]:
     login_data = {
         "username": "normal_user",
@@ -57,12 +54,12 @@ async def normal_user_token_headers(client: AsyncClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {access_token}"}
 
 
-@pytest.fixture()
+@pytest_asyncio.fixture
 async def users(
     client: AsyncClient,
     admin_token_headers: dict[str, str],
 ) -> list[dict[str, str]]:
-    res = await client.get("/api/v1/users", headers=await admin_token_headers)
+    res = await client.get("/api/v1/users", headers=admin_token_headers)
     return res.json()
 
 
@@ -72,7 +69,7 @@ def pytest_configure(config):
     This hook is called for every plugin and initial conftest
     file after command line options have been parsed.
     """
-    generate_database()
+    ...
 
 
 def pytest_sessionstart(session):
@@ -95,15 +92,4 @@ def pytest_unconfigure(config):
     """
     called before test process is exited.
     """
-
-
-def generate_database():
-    if os.path.isfile("test.db"):
-        os.remove("test.db")
-
-    engine = create_engine(
-        config.DB_URL, connect_args={"check_same_thread": False}
-    )
-    Base.metadata.create_all(engine)
-    engine.dispose()
-    seed_db()
+    ...

@@ -20,7 +20,7 @@ user_v1_router = APIRouter()
 @user_v1_router.get(
     "",
     response_model=list[FullUserSchema],
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency(IsAdmin))],
 )
 @version(1)
 async def get_users(session: Session = Depends(get_db)):
@@ -41,7 +41,7 @@ async def get_user(user_id: int = Depends(get_path_user_id), session: Session = 
     "",
     response_model=FullUserSchema,
     status_code=201,
-    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+    dependencies=[Depends(PermissionDependency(AllowAll))],
 )
 @version(1)
 async def create_user(schema: CreateUserSchema, session: Session = Depends(get_db)):
@@ -53,7 +53,7 @@ async def create_user(schema: CreateUserSchema, session: Session = Depends(get_d
     response_model=FullUserSchema,
     status_code=200,
     dependencies=[
-        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsUserOwner]]))
+        Depends(PermissionDependency(IsAdmin, OR, (IsAuthenticated, AND, IsUserOwner)))
     ],
 )
 @version(1)
@@ -67,7 +67,7 @@ async def update_user(
     "/{user_id}",
     status_code=204,
     dependencies=[
-        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsUserOwner]]))
+        Depends(PermissionDependency(IsAdmin, OR, (IsAuthenticated, AND, IsUserOwner)))
     ],
 )
 @version(1)

@@ -29,7 +29,7 @@ from core.config import config
     is_flag=True,
     default=False,
 )
-def main(env: str = None, debug: bool = None):
+def main(env: str = "dev", debug: bool = True):
     """
     Boot up the application.
 

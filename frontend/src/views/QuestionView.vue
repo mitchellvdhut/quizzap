@@ -1,18 +1,32 @@
 <template>
   <div class="question-view">
+    <QuestionText :question="question"/>
+    <div class="answer-section">
     <BaseTile v-for="answer in answers" :answer="answer" class="answer"/>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import BaseTile from "@/components/BaseTile.vue";
+import QuestionText from "@/components/QuestionText.vue";
 import {ref} from "vue";
 
+const question = ref("Wat is het antwoord op de vraag?")
 const answers = ref(["antwoord 1", "antwoord 2", "antwoord 3", "antwoord 4"] as const);
 </script>
 
 <style lang="scss" scoped>
 .question-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 6rem;
+}
+.answer-section {
   max-width: 1280px;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -20,7 +34,6 @@ const answers = ref(["antwoord 1", "antwoord 2", "antwoord 3", "antwoord 4"] as 
 }
 .answer {
   cursor: pointer;
-  font-family: $font-family;
   font-weight: 700;
   font-size: 2rem;
 }
@@ -38,6 +51,7 @@ const answers = ref(["antwoord 1", "antwoord 2", "antwoord 3", "antwoord 4"] as 
       color: $tile-text-color;
       box-shadow: -6px 6px 0 $tile-shadow-color;
       position: relative;
+      user-select: none;
 
       &:hover {
         top: 3px;
@@ -50,6 +64,17 @@ const answers = ref(["antwoord 1", "antwoord 2", "antwoord 3", "antwoord 4"] as 
         box-shadow: none;
       }
     }
+  }
+}
+
+@media only screen and (max-width: 948px) {
+  .answer-section {
+    width: calc(100% - 2rem);
+    padding-inline: 1rem;
+    grid-template-columns: 1fr;
+  }
+  .answer {
+    width: 100%;
   }
 }
 

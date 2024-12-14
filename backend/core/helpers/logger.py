@@ -49,3 +49,27 @@ def get_logger(exc: Exception | str = None):
     )
 
     return log_name
+
+
+def setup_logging(name: str):
+    formatter = logging.Formatter(fmt='%(levelname)s:\t%(message)s (%(module)s)')
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+
+    return logger
+
+
+def log_exc(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+
+        except Exception as exc:
+            logger = logging.getLogger("quizzap")
+            logger.exception(exc)
+    return wrapper

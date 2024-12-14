@@ -17,6 +17,7 @@ from core.fastapi.middlewares import (
     AuthBackend,
     # ResponseLogMiddleware,
 )
+from core.helpers.logger import setup_logging
 from core.versioning import VersionedFastAPI
 
 
@@ -124,6 +125,7 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+setup_logging("quizzap")
 
 
 # Greg is disappointed

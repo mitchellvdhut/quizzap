@@ -15,6 +15,11 @@ class SuccessfullConnection(ConnectionCode):
     message = "you have connected"
 
 
+class RequestSuccessful(ConnectionCode):
+    status_code = 200
+    message = "request has been handled successfully"
+
+
 class ClosingConnection(ConnectionCode):
     status_code = 200
     message = "you have been forcefully disconnected"
@@ -50,6 +55,36 @@ class InvalidIdException(CustomException):
     message = "either session or user id is invalid"
 
 
+class QuizStoppedException(CustomException):
+    status_code = 400
+    error_status_code = "WEBSOCKET__QUIZ_STOPPED"
+    message = "quiz has already stopped"
+
+
+class InvalidVoteException(CustomException):
+    status_code = 400
+    error_status_code = "WEBSOCKET__INVALID_VOTE"
+    message = "vote index is out of range"
+
+
+class NoQuestionException(CustomException):
+    status_code = 400
+    error_status_code = "WEBSOCKET__NO_QUESTION"
+    message = "there is no question currently active"
+
+
+class AlreadyVotedException(CustomException):
+    status_code = 409
+    error_status_code = "WEBSOCKET__ALREADY_VOTED"
+    message = "you have already voted on this question"
+
+
+class UsernameTakenException(CustomException):
+    status_code = 409
+    error_status_code = "WEBSOCKET__USERNAME_TAKEN"
+    message = "username was already taken"
+
+
 class AccessDeniedException(CustomException):
     status_code = 403
     error_status_code = "WEBSOCKET__ACCESS_DENIED"
@@ -60,6 +95,12 @@ class StatusNotFoundException(CustomException):
     status_code = 404
     error_status_code = "WEBSOCKET__STATUS_NOT_FOUND"
     message = "status does not exist"
+
+
+class SessionNotFoundException(CustomException):
+    status_code = 404
+    error_status_code = "WEBSOCKET__SESSION_NOT_FOUND"
+    message = "session does not exist"
 
 
 class ActionNotFoundException(CustomException):
