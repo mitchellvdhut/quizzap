@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import TypedDict
 
+from pydantic import BaseModel
+
 from core.db.models import Question, Quiz
 from core.enums.websocket import QuizStateEnum
 
@@ -31,3 +33,11 @@ class UserScore(TypedDict):
     username: str
     score: int
     streak: int
+
+
+class KickUserRequestSchema(BaseModel):
+    username: str
+
+
+class GlobalMessageRequestSchema(BaseModel):
+    message: str

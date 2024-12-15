@@ -8,13 +8,14 @@ from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 from pydantic import BaseModel, ValidationError
 
-from core.enums.websocket import WebsocketActionEnum
+from core.enums.websocket import WebSocketActionEnum
 from core.exceptions.base import CustomException
 from core.exceptions.websocket import (
     ActionNotImplementedException,
+    IncompletePayloadException,
     JSONSerializableException,
 )
-from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
+from core.helpers.websocket.schemas.packet import WebSocketPacketSchema
 
 
 class WebSocketConnection:
@@ -50,7 +51,7 @@ class WebSocketConnection:
 
     async def send(
         self,
-        data: BaseWebsocketPacketSchema,
+        data: WebSocketPacketSchema,
     ):
         logger = logging.getLogger("quizzap")
 
@@ -58,7 +59,7 @@ class WebSocketConnection:
             logger.warning("Trying to send to disconnected websocket")
             return
 
-        logger.info(f"Websocket Sending: {data}")
+        logger.info(f"WebSocket Sending: {data}")
 
         def default(o):
             if isinstance(o, (datetime.date, datetime.datetime)):
@@ -76,9 +77,9 @@ class WebSocketConnection:
 
     async def listen(
         self,
-        schema: Type[BaseWebsocketPacketSchema],
+        schema: Type[WebSocketPacketSchema],
         timeout: float | None = None,
-    ) -> BaseWebsocketPacketSchema | None:
+    ) -> WebSocketPacketSchema | None:
         if self.disconnected:
             logger = logging.getLogger("quizzap")
             logger.warning("Trying to listen to disconnected websocket")
@@ -114,6 +115,15 @@ class WebSocketConnection:
             raise ActionNotImplementedException from exc
 
         return packet
+    
+    def validate_payload(self, packet: WebSocketPacketSchema, schema: Type[BaseModel]) -> Type[BaseModel] | None:
+        try:
+            payload = schema(**packet.payload)
+        except ValidationError as exc:
+            self.status_code(IncompletePayloadException(str(exc.errors())))
+            return
+
+        return payload
 
     async def status_code(
         self,
@@ -122,9 +132,9 @@ class WebSocketConnection:
         if not self.accepted:
             raise Exception("WebSocket was not accepted.")
 
-        packet = BaseWebsocketPacketSchema(
+        packet = WebSocketPacketSchema(
             status_code=exception.status_code,
-            action=WebsocketActionEnum.STATUS_CODE,
+            action=WebSocketActionEnum.STATUS_CODE,
             message=exception.message,
             payload=None,
         )

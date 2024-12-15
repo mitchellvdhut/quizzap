@@ -2,24 +2,24 @@ from typing import Any
 from pydantic import BaseModel
 
 
-class WebsocketPacketParams(BaseModel):
+class WebSocketPacketParams(BaseModel):
     status_code: str = "integer"
     message: str = "string"
     action: str = "string"
     payload: dict[str, Any] = {}
 
 
-class RequestWebsocketDocsSchema(BaseModel):
+class RequestWebSocketDocsSchema(BaseModel):
     info: str
-    params: WebsocketPacketParams = WebsocketPacketParams(payload={})
+    params: WebSocketPacketParams = WebSocketPacketParams(payload={})
 
 
-class ResponseWebsocketDocsSchema(BaseModel):
+class ResponseWebSocketDocsSchema(BaseModel):
     info: str
-    params: WebsocketPacketParams = WebsocketPacketParams(payload={})
+    params: WebSocketPacketParams = WebSocketPacketParams(payload={})
 
 
-class WebsocketDocsSchema(BaseModel):
+class WebSocketDocsSchema(BaseModel):
     info: str
-    request: RequestWebsocketDocsSchema | None = None
-    response: ResponseWebsocketDocsSchema | None = None
+    request: RequestWebSocketDocsSchema | None = None
+    response: ResponseWebSocketDocsSchema | None = None

@@ -10,20 +10,20 @@ from core.fastapi.dependencies.permission.keyword import Keyword
 from core.exceptions.base import UnauthorizedException
 
 
-class BaseWebsocketPermission(ABC):
+class BaseWebSocketPermission(ABC):
     @abstractmethod
     async def has_permission(self, pool_id: int, access_token: str, **kwargs) -> bool:
         del pool_id, access_token, kwargs
 
 
-PermItem = Union[Type[BaseWebsocketPermission], Type[Keyword], tuple, list]
+PermItem = Union[Type[BaseWebSocketPermission], Type[Keyword], tuple, list]
 PermList = Union[tuple[PermItem], list[PermItem]]
 
 
-class WebsocketPermission(PermissionDependency):
+class WebSocketPermission(PermissionDependency):
     def __init__(self, *perms):
         super().__init__(*perms)
-        self.base_perm_type = BaseWebsocketPermission
+        self.base_perm_type = BaseWebSocketPermission
 
     async def __call__(
         self,
@@ -41,7 +41,7 @@ class WebsocketPermission(PermissionDependency):
         if not access:
             raise UnauthorizedException
 
-    async def execute_perm(self, permission: BaseWebsocketPermission):
+    async def execute_perm(self, permission: BaseWebSocketPermission):
         access_token = self.access_token
         kwargs = self.kwargs
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { startWebsocket } from './api/websocket';
+import { startWebSocket } from './api/websocket';
 
-const websocket = startWebsocket(`/quizCreate/kXG8?token=ANARCHY`)
+const websocket = startWebSocket(`/quizCreate/kXG8?token=ANARCHY`)
 
 websocket.onStatusCode = (packet) => {
   console.log("Result", packet);

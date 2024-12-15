@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class WebsocketActionEnum(str, Enum):
+class WebSocketActionEnum(str, Enum):
     STATUS_CODE = "STATUS_CODE"         # Send a HTTP like status code
     POOL_MESSAGE = "POOL_MESSAGE"       # Send a simple message to all in pool
     GLOBAL_MESSAGE = "GLOBAL_MESSAGE"   # Send a simple message to all connected
@@ -10,7 +10,7 @@ class WebsocketActionEnum(str, Enum):
     SESSION_CLOSE = "SESSION_CLOSE"     # Session is closing
 
 
-class WebsocketSessionEnum(str, Enum):
+class WebSocketSessionEnum(str, Enum):
     READY = "READY"             # Ready for starting internal session
     STARTING = "STARTING"       # Starting internal session
     STARTED = "STARTED"         # Started internal session, ready for connections
@@ -18,6 +18,12 @@ class WebsocketSessionEnum(str, Enum):
     FINISHED = "FINISHED"       # Session is has finished task (task is for the client)
     STOPPING = "STOPPING"       # Internal session is stopping
     STOPPED = "STOPPED"         # Internal session has stopped
+
+
+class WebSocketTargetEnum(str, Enum):
+    INDIVIDUAL = "INDIVIDUAL"
+    POOL = "POOL"
+    GLOBAL = "GLOBAL"
 
 
 class QuizSessionActionEnum(str, Enum):
@@ -30,6 +36,7 @@ class QuizSessionActionEnum(str, Enum):
     SCORE_INFO = "SCORE_INFO"            # Responds with all player scores
     QUIZ_END = "QUIZ_END"                # Indicate the end of the quiz
     USER_RECONNECT = "USER_RECONNECT"    # Indicate user reconnect
+    KICK_USER = "KICK_USER"              # Kick a user from session
 
 
 class QuizStateEnum(str, Enum):

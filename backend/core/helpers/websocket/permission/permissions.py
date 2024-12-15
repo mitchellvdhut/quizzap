@@ -2,18 +2,18 @@
 Permission class to approve and refuse access on websockets.
 """
 from core.helpers.token.token_helper import TokenHelper
-from core.helpers.websocket.permission.permission_dependency import BaseWebsocketPermission
+from core.helpers.websocket.permission.permission_dependency import BaseWebSocketPermission
 
 from core.exceptions.base import CustomException
 
 
-class AllowAll(BaseWebsocketPermission):
+class AllowAll(BaseWebSocketPermission):
     async def has_permission(self, access_token: str, **kwargs) -> bool:
         del access_token, kwargs
         return True
 
 
-class IsAuthenticated(BaseWebsocketPermission):
+class IsAuthenticated(BaseWebSocketPermission):
     async def has_permission(self, access_token: str, **kwargs) -> bool:
         del kwargs
 

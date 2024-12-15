@@ -1,15 +1,20 @@
+from enum import Enum
 from typing import Any
 from pydantic import BaseModel
 
-from core.enums.websocket import QuizSessionActionEnum, WebsocketActionEnum
+from core.enums.websocket import QuizSessionActionEnum, WebSocketActionEnum
 
 
-class BaseWebsocketPacketSchema(BaseModel):
+class WebSocketPacketSchema(BaseModel):
     status_code: int | None = None
-    action: WebsocketActionEnum
+    action: Enum
     message: str
     payload: dict[str, Any] | None = None
 
 
-class QuizWebsocketPacketSchema(BaseWebsocketPacketSchema):
-    action: WebsocketActionEnum | QuizSessionActionEnum
+class BaseWebSocketPacketSchema(WebSocketPacketSchema):
+    action: WebSocketActionEnum
+
+
+class QuizWebSocketPacketSchema(BaseWebSocketPacketSchema):
+    action: WebSocketActionEnum | QuizSessionActionEnum

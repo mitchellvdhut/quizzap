@@ -523,7 +523,6 @@
       textarea.value = JSON.stringify(data.payload);
 
       button.onclick = function (event) {
-        console.log("Yeah!")
         textarea.value = JSON.stringify(JSON.parse(event.target.value), null, 4);
       }
 

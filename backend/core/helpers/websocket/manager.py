@@ -3,11 +3,11 @@ from typing import Any
 from core.helpers.websocket.active_pools import ActivePools
 from core.exceptions.base import UnauthorizedException
 from core.helpers.websocket.permission.permission_dependency import (
-    WebsocketPermission,
+    WebSocketPermission,
     PermItem,
 )
-from core.helpers.websocket.schemas.packet import BaseWebsocketPacketSchema
-from core.helpers.websocket.websocket import WebSocketConnection
+from core.helpers.websocket.schemas.packet import BaseWebSocketPacketSchema
+from backend.core.helpers.websocket.classes.websocket import WebSocketConnection
 from fastapi import status
 
 
@@ -25,7 +25,7 @@ class WebSocketConnectionManager:
         if not perms:
             perms = self.perms
 
-        perm_checker = WebsocketPermission(perms)
+        perm_checker = WebSocketPermission(perms)
 
         try:
             await perm_checker(access_token, **kwargs)
@@ -77,21 +77,21 @@ class WebSocketConnectionManager:
     async def personal_packet(
         self,
         websocket: WebSocketConnection,
-        packet: BaseWebsocketPacketSchema,
+        packet: BaseWebSocketPacketSchema,
     ) -> None:
         await websocket.send(packet)
 
     async def pool_packet(
         self,
         pool_id: int,
-        packet: BaseWebsocketPacketSchema,
+        packet: BaseWebSocketPacketSchema,
     ) -> None:
         for _, client in self.active_pools[pool_id]["clients"].items():
             await client["ws"].send(packet)
 
     async def global_packet(
         self,
-        packet: BaseWebsocketPacketSchema,
+        packet: BaseWebSocketPacketSchema,
     ) -> None:
         for _, pool in self.active_pools.items():
             for _, client in pool["clients"].items():
@@ -131,8 +131,19 @@ class WebSocketConnectionManager:
     ) -> dict[str, Any]:
         return self.active_pools.get_client_data(pool_id, websocket_id)
 
+    def get_client_pool(
+        self,
+        websocket_id: int,
+    ) -> str:
+        for pool_id in self.active_pools:
+            for client_id in self.active_pools[pool_id]["clients"]:
+                if client_id == websocket_id:
+                    return pool_id
+        else:
+            raise Exception("websocket not found in pools")
+
     def garbage_collector(
-        self, 
+        self,
         pool_id: str | None = None,
     ) -> None:
         if pool_id:
@@ -141,9 +152,9 @@ class WebSocketConnectionManager:
                     break
             else:
                 self.active_pools.remove_pool(pool_id)
-            
+
             return
-        
+
         for pool_id in self.active_pools:
             for _, client in self.active_pools[pool_id]["clients"].items():
                 if client["ws"].is_connected:

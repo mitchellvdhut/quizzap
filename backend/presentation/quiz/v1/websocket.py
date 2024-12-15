@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, WebSocket
 
-from app.quiz.websocket.quiz import QuizWebsocketService
+from app.quiz.websocket.quiz import QuizWebSocketService
 from app.quiz.websocket.docs import quiz_actions
 from app.quiz.dependencies.quiz import get_path_quiz_id
 from core.helpers.websocket.dependencies.docs import parse_actions
@@ -19,7 +19,7 @@ async def create_quiz_session(
     client_token: str,
     quiz_id: int = Depends(get_path_quiz_id),
 ):
-    await QuizWebsocketService(websocket, [IsAuthenticated]).start_create_session(
+    await QuizWebSocketService(websocket, [IsAuthenticated]).start_create_session(
         quiz_id=quiz_id,
         access_token=access_token,
         client_token=client_token,
@@ -34,7 +34,7 @@ async def join_quiz_session(
     username: str,
     client_token: str,
 ):
-    await QuizWebsocketService(websocket, [AllowAll]).start_join_session(
+    await QuizWebSocketService(websocket, [AllowAll]).start_join_session(
         session_id=session_id,
         username=username,
         client_token=client_token,

@@ -1,15 +1,16 @@
-"""Module containing the base websocket service for other variations to extend upon.
-"""
-
 from datetime import datetime, timedelta
-import logging
 import random
 from fastapi import WebSocket
 from app.user.services.user import UserService
-from app.quiz.schemas.websocket import PoolData, UserData, UserScore
+from app.quiz.schemas.websocket import (
+    KickUserRequestSchema,
+    PoolData,
+    UserData,
+    UserScore,
+)
 from app.quiz.services.quiz import QuizService
 from app.question.schemas.question import QuestionSchema
-from core.helpers.websocket.websocket import WebSocketConnection
+from backend.core.helpers.websocket.classes.websocket import WebSocketConnection
 from core.db.models import Question
 from core.helpers.logger import log_exc
 from core.exceptions.token import DecodeTokenException
@@ -28,36 +29,34 @@ from core.exceptions.websocket import (
     UsernameTakenException,
 )
 from core.helpers.websocket import manager
-from core.enums.websocket import QuizSessionActionEnum, WebsocketActionEnum
-from core.helpers.websocket.schemas.packet import QuizWebsocketPacketSchema
-from core.helpers.websocket.base import BaseWebsocketService
+from core.enums.websocket import QuizSessionActionEnum, WebSocketActionEnum
+from core.helpers.websocket.schemas.packet import QuizWebSocketPacketSchema
+from core.helpers.websocket.base import BaseWebSocketService
 from core.helpers.websocket.permission.permission_dependency import PermList
 
 
-class QuizWebsocketService(BaseWebsocketService):
+class QuizWebSocketService(BaseWebSocketService):
     def __init__(
         self,
         websocket: WebSocket,
         perms: PermList | None = None,
     ):
         actions = {
-            WebsocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
-            WebsocketActionEnum.SESSION_CLOSE.value: self.handle_session_close,
+            WebSocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
+            WebSocketActionEnum.SESSION_CLOSE.value: self.handle_session_close,
             QuizSessionActionEnum.SUBMIT_VOTE: self.handle_sumbit_vote,
             QuizSessionActionEnum.QUESTION_START: self.handle_question_start_request,
             QuizSessionActionEnum.QUESTION_STOP: self.handle_question_stop_request,
+            QuizSessionActionEnum.KICK_USER: self.handle_action_not_implemented,
         }
 
         super().__init__(
             manager,
             websocket,
             perms,
-            QuizWebsocketPacketSchema,
+            QuizWebSocketPacketSchema,
             actions,
         )
-
-        logger = logging.getLogger("quizzer")
-        logger.info("Initializing!")
 
     @log_exc
     async def start_create_session(
@@ -149,7 +148,6 @@ class QuizWebsocketService(BaseWebsocketService):
             await self.manager.disconnect(self.ws, self.pool_id)
             return
 
-
         for cl_id, client in self.manager.active_pools[self.pool_id]["clients"].items():
             user_data: UserData = client["data"]
             if not (user_data["client_token"] == client_token):
@@ -162,12 +160,16 @@ class QuizWebsocketService(BaseWebsocketService):
             del self.manager.active_pools[self.pool_id]["clients"][cl_id]
             self.manager.active_pools[self.pool_id]["clients"][self.ws.id] = old
 
-            await self.handle_user_reconnect(payload={"username": user_data["username"]})
+            await self.handle_user_reconnect(
+                payload={"username": user_data["username"]}
+            )
 
             break
 
         else:
-            for cl_id, client in self.manager.active_pools[self.pool_id]["clients"].items():
+            for cl_id, client in self.manager.active_pools[self.pool_id][
+                "clients"
+            ].items():
                 user_data: UserData = client["data"]
                 if user_data["username"].lower() == username.lower():
                     await self.manager.connect(self.ws, self.pool_id)
@@ -184,7 +186,7 @@ class QuizWebsocketService(BaseWebsocketService):
                 "vote": None,
                 "voted_at": None,
                 "client_token": client_token,
-            }    
+            }
 
             await self.manager.connect(self.ws, self.pool_id)
             self.manager.set_client_data(self.pool_id, self.ws.id, user_data)
@@ -243,7 +245,7 @@ class QuizWebsocketService(BaseWebsocketService):
         self,
         session_id: int,
     ) -> None:
-        packet = QuizWebsocketPacketSchema(
+        packet = QuizWebSocketPacketSchema(
             status_code=201,
             action=QuizSessionActionEnum.SESSION_CREATED,
             message="created new session",
@@ -254,7 +256,7 @@ class QuizWebsocketService(BaseWebsocketService):
 
     async def handle_pool_message(
         self,
-        packet: QuizWebsocketPacketSchema,
+        packet: QuizWebSocketPacketSchema,
         message: str | None = None,
         **kwargs,
     ) -> None:
@@ -267,7 +269,7 @@ class QuizWebsocketService(BaseWebsocketService):
 
     async def handle_sumbit_vote(
         self,
-        packet: QuizWebsocketPacketSchema,
+        packet: QuizWebSocketPacketSchema,
         **kwargs,
     ) -> None:
         del kwargs
@@ -305,7 +307,7 @@ class QuizWebsocketService(BaseWebsocketService):
 
         question_schema = QuestionSchema(**question.__dict__)
 
-        packet = QuizWebsocketPacketSchema(
+        packet = QuizWebSocketPacketSchema(
             status_code=200,
             action=QuizSessionActionEnum.QUESTION_INFO,
             message="retrieved question information",
@@ -359,7 +361,7 @@ class QuizWebsocketService(BaseWebsocketService):
     ) -> None:
         del kwargs
 
-        packet = QuizWebsocketPacketSchema(
+        packet = QuizWebSocketPacketSchema(
             status_code=200,
             action=QuizSessionActionEnum.QUESTION_START,
             message="retrieved question information",
@@ -388,7 +390,7 @@ class QuizWebsocketService(BaseWebsocketService):
     ) -> None:
         del kwargs
 
-        packet = QuizWebsocketPacketSchema(
+        packet = QuizWebSocketPacketSchema(
             status_code=200,
             action=QuizSessionActionEnum.QUESTION_STOP,
             message="question stopped",
@@ -479,7 +481,7 @@ class QuizWebsocketService(BaseWebsocketService):
                 }
             )
 
-        packet = QuizWebsocketPacketSchema(
+        packet = QuizWebSocketPacketSchema(
             status_code=200,
             action=QuizSessionActionEnum.SCORE_INFO,
             message="session user info",
@@ -494,7 +496,7 @@ class QuizWebsocketService(BaseWebsocketService):
     ) -> None:
         del kwargs
 
-        packet = QuizWebsocketPacketSchema(
+        packet = QuizWebSocketPacketSchema(
             status_code=200,
             action=QuizSessionActionEnum.QUIZ_END,
             message="quiz has ended",
@@ -547,14 +549,59 @@ class QuizWebsocketService(BaseWebsocketService):
         if not message:
             message = "user has reconnected"
 
-        packet = QuizWebsocketPacketSchema(
+        packet = QuizWebSocketPacketSchema(
             status_code=100,
             action=QuizSessionActionEnum.USER_RECONNECT,
             message=message,
             payload=payload,
         )
 
-        logger = logging.getLogger("quizzap")
-        logger.info(self.manager.active_pools)
+        await self.manager.pool_packet(self.pool_id, packet)
+
+    async def handle_kick_user_request(
+        self,
+        packet: QuizWebSocketPacketSchema,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        payload: KickUserRequestSchema = self.ws.validate_payload(
+            packet.payload,
+            KickUserRequestSchema,
+        )
+
+        if not payload:
+            return
+
+        await self.handle_kick_user(payload.username)
+
+    async def handle_kick_user(
+        self,
+        username: str,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        await self.handle_kick_user_response(username)
+
+    async def handle_kick_user_response(
+        self,
+        username: str,
+        message: str | None = None,
+        **kwargs,
+    ) -> None:
+        del kwargs
+
+        if not message:
+            message = "user was kicked"
+
+        payload = {"username": username}
+
+        packet = QuizWebSocketPacketSchema(
+            status_code=200,
+            action=QuizSessionActionEnum.KICK_USER,
+            message=message,
+            payload=payload,
+        )
 
         await self.manager.pool_packet(self.pool_id, packet)

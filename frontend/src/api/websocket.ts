@@ -1,30 +1,30 @@
 import {
-  WebsocketActions,
-  WebsocketState,
-  WebsocketUserType,
+  WebSocketActions,
+  WebSocketState,
+  WebSocketUserType,
   type AnswerCount,
-  type HostWebsocketCallbacks,
-  type HostWebsocketInteraction,
+  type HostWebSocketCallbacks,
+  type HostWebSocketInteraction,
   type Message,
-  type PlayerWebsocketCallbacks,
-  type PlayerWebsocketInteraction,
+  type PlayerWebSocketCallbacks,
+  type PlayerWebSocketInteraction,
   type Question,
   type ReceiveMessage,
-  type SendWebsocketPacket,
+  type SendWebSocketPacket,
   type SessionId, type Username,
   type UserScore, type Vote,
-  type WebsocketConnection,
-  type WebsocketInteraction,
-  type WebsocketPacket,
-  type WebsocketResult,
+  type WebSocketConnection,
+  type WebSocketInteraction,
+  type WebSocketPacket,
+  type WebSocketResult,
 } from "@/types";
 
 const baseUrl = import.meta.env.VITE_WEBSOCKET_URL + "/api/latest/sockets"
 
-export function startWebsocket(url: string): WebsocketConnection {
+export function startWebSocket(url: string): WebSocketConnection {
   const ws = new WebSocket(baseUrl + url);
 
-  const websocket: WebsocketConnection = {
+  const websocket: WebSocketConnection = {
     socket: ws,
 
     onDefault: (packet) => { console.error("Unhandled action", packet) },
@@ -50,8 +50,8 @@ export function startWebsocket(url: string): WebsocketConnection {
   }
 
   websocket.sendPoolMessage = (payload) => {
-    const packet: SendWebsocketPacket<Message> = {
-      action: WebsocketActions.POOL_MESSAGE,
+    const packet: SendWebSocketPacket<Message> = {
+      action: WebSocketActions.POOL_MESSAGE,
       message: "it's about sending a message",
       payload: payload,
     }
@@ -60,8 +60,8 @@ export function startWebsocket(url: string): WebsocketConnection {
   };
 
   websocket.sendCloseSession = () => {
-    const packet: SendWebsocketPacket = {
-      action: WebsocketActions.SESSION_CLOSE,
+    const packet: SendWebSocketPacket = {
+      action: WebSocketActions.SESSION_CLOSE,
       message: "closing session",
       payload: null,
     }
@@ -70,8 +70,8 @@ export function startWebsocket(url: string): WebsocketConnection {
   };
 
   websocket.sendSubmitVote = (payload) => {
-    const packet: SendWebsocketPacket<Vote> = {
-      action: WebsocketActions.SUBMIT_VOTE,
+    const packet: SendWebSocketPacket<Vote> = {
+      action: WebSocketActions.SUBMIT_VOTE,
       message: "submitting vote",
       payload: payload,
     }
@@ -80,8 +80,8 @@ export function startWebsocket(url: string): WebsocketConnection {
   };
 
   websocket.sendQuestionStart = () => {
-    const packet: SendWebsocketPacket = {
-      action: WebsocketActions.QUESTION_START,
+    const packet: SendWebSocketPacket = {
+      action: WebSocketActions.QUESTION_START,
       message: "requesting new question",
       payload: null,
     }
@@ -90,8 +90,8 @@ export function startWebsocket(url: string): WebsocketConnection {
   };
 
   websocket.sendQuestionStop = () => {
-    const packet: SendWebsocketPacket = {
-      action: WebsocketActions.QUESTION_STOP,
+    const packet: SendWebSocketPacket = {
+      action: WebSocketActions.QUESTION_STOP,
       message: "stopping question",
       payload: null,
     }
@@ -99,12 +99,12 @@ export function startWebsocket(url: string): WebsocketConnection {
     defaultSend(websocket.socket, packet);
   };
 
-  function defaultSend<T>(ws: WebSocket, packet: SendWebsocketPacket<T>) {
+  function defaultSend<T>(ws: WebSocket, packet: SendWebSocketPacket<T>) {
     const jsonData = JSON.stringify(packet);
     ws.send(jsonData);
   }
 
-  function defaultFunction<T>(packet: WebsocketPacket<T>) {
+  function defaultFunction<T>(packet: WebSocketPacket<T>) {
     console.warn(`ACTION RESPONSE NOT IMPLEMENTED: ${packet.action}`, packet);
   }
 
@@ -114,7 +114,7 @@ export function startWebsocket(url: string): WebsocketConnection {
       return;
     }
 
-    let data: WebsocketPacket<unknown> | null = null;
+    let data: WebSocketPacket<unknown> | null = null;
 
     try {
       data = JSON.parse(event.data);
@@ -130,48 +130,48 @@ export function startWebsocket(url: string): WebsocketConnection {
     }
 
     switch (data.action) {
-      case WebsocketActions.STATUS_CODE:
-        websocket.onStatusCode(data as WebsocketPacket<null>);
+      case WebSocketActions.STATUS_CODE:
+        websocket.onStatusCode(data as WebSocketPacket<null>);
         break;
 
-      case WebsocketActions.POOL_MESSAGE:
-        websocket.onPoolMessage(data as WebsocketPacket<ReceiveMessage>);
+      case WebSocketActions.POOL_MESSAGE:
+        websocket.onPoolMessage(data as WebSocketPacket<ReceiveMessage>);
         break;
 
-      case WebsocketActions.GLOBAL_MESSAGE:
-        websocket.onGlobalMessage(data as WebsocketPacket<Message>);
+      case WebSocketActions.GLOBAL_MESSAGE:
+        websocket.onGlobalMessage(data as WebSocketPacket<Message>);
         break;
 
-      case WebsocketActions.USER_CONNECT:
-        websocket.onUserConnect(data as WebsocketPacket<Username>);
+      case WebSocketActions.USER_CONNECT:
+        websocket.onUserConnect(data as WebSocketPacket<Username>);
         break;
 
-      case WebsocketActions.USER_DISCONNECT:
-        websocket.onUserDisconnect(data as WebsocketPacket<Username>);
+      case WebSocketActions.USER_DISCONNECT:
+        websocket.onUserDisconnect(data as WebSocketPacket<Username>);
         break;
 
-      case WebsocketActions.SESSION_CLOSE:
-        websocket.onSessionClose(data as WebsocketPacket<Message>);
+      case WebSocketActions.SESSION_CLOSE:
+        websocket.onSessionClose(data as WebSocketPacket<Message>);
         break;
 
-      case WebsocketActions.SESSION_CREATED:
-        websocket.onSessionCreated(data as WebsocketPacket<SessionId>);
+      case WebSocketActions.SESSION_CREATED:
+        websocket.onSessionCreated(data as WebSocketPacket<SessionId>);
         break;
 
-      case WebsocketActions.QUESTION_INFO:
-        websocket.onQuestionInfo(data as WebsocketPacket<Question>);
+      case WebSocketActions.QUESTION_INFO:
+        websocket.onQuestionInfo(data as WebSocketPacket<Question>);
         break;
 
-      case WebsocketActions.QUESTION_START:
-        websocket.onQuestionStart(data as WebsocketPacket<AnswerCount>);
+      case WebSocketActions.QUESTION_START:
+        websocket.onQuestionStart(data as WebSocketPacket<AnswerCount>);
         break;
 
-      case WebsocketActions.QUESTION_STOP:
-        websocket.onQuestionStop(data as WebsocketPacket<null>);
+      case WebSocketActions.QUESTION_STOP:
+        websocket.onQuestionStop(data as WebSocketPacket<null>);
         break;
 
-      case WebsocketActions.SCORE_INFO:
-        websocket.onScoreInfo(data as WebsocketPacket<UserScore[]>);
+      case WebSocketActions.SCORE_INFO:
+        websocket.onScoreInfo(data as WebSocketPacket<UserScore[]>);
         break;
 
       default:
@@ -195,17 +195,17 @@ function getOrGenClientToken() {
   return clientToken;
 }
 
-export function createSession(quizId: string, callbacks: HostWebsocketCallbacks): WebsocketInteraction {
+export function createSession(quizId: string, callbacks: HostWebSocketCallbacks): WebSocketInteraction {
   const clientToken = getOrGenClientToken();
   const access_token = "insert access_token here";
 
   const url = `/quizCreate/${quizId}?access_token=${access_token}&client_token=${clientToken}`;
-  const ws = startWebsocket(url);
+  const ws = startWebSocket(url);
 
-  const interactable: HostWebsocketInteraction = {
+  const interactable: HostWebSocketInteraction = {
     ws: ws,
-    state: WebsocketState.QUIZ_READY,
-    userType: WebsocketUserType.HOST,
+    state: WebSocketState.QUIZ_READY,
+    userType: WebSocketUserType.HOST,
 
     closeSession: () => { throw new Error("Function not implemented.") },
     startNextQuestion: () => { throw new Error("Function not implemented.") },
@@ -214,7 +214,7 @@ export function createSession(quizId: string, callbacks: HostWebsocketCallbacks)
   }
 
   interactable.ws.onQuestionStop = () => {
-    interactable.state = WebsocketState.IDLE;
+    interactable.state = WebSocketState.IDLE;
     callbacks.onQuestionStop();
   }
 
@@ -243,35 +243,35 @@ export function createSession(quizId: string, callbacks: HostWebsocketCallbacks)
     return await generatePromise("onPoolMessage");
   }
 
-  async function generatePromise<T = null>(targetFunction: keyof WebsocketConnection, timeout?: number): Promise<WebsocketResult<T>> {
+  async function generatePromise<T = null>(targetFunction: keyof WebSocketConnection, timeout?: number): Promise<WebSocketResult<T>> {
     return await _generatePromise<T>(interactable, targetFunction, timeout);
   }
 
   return interactable;
 }
 
-export function joinSession(sessionId: string, username: string, callbacks: PlayerWebsocketCallbacks) {
+export function joinSession(sessionId: string, username: string, callbacks: PlayerWebSocketCallbacks) {
   const clientToken = getOrGenClientToken();
 
   const url = `/quizJoin/${sessionId}?username=${username}&client_token=${clientToken}`;
-  const ws = startWebsocket(url);
+  const ws = startWebSocket(url);
 
-  const interactable: PlayerWebsocketInteraction = {
+  const interactable: PlayerWebSocketInteraction = {
     ws: ws,
-    state: WebsocketState.QUIZ_READY,
-    userType: WebsocketUserType.PLAYER,
+    state: WebSocketState.QUIZ_READY,
+    userType: WebSocketUserType.PLAYER,
 
     submitVote: () => { throw new Error("Function not implemented.") },
     sendChat: () => { throw new Error("Function not implemented.") },
   }
 
   interactable.ws.onQuestionStart = (packet) => {
-    interactable.state = WebsocketState.QUESTION_ACTIVE;
+    interactable.state = WebSocketState.QUESTION_ACTIVE;
     callbacks.onQuestionStart(packet.payload);
   }
 
   interactable.ws.onQuestionStop = () => {
-    interactable.state = WebsocketState.IDLE;
+    interactable.state = WebSocketState.IDLE;
     callbacks.onQuestionStop();
   }
 
@@ -288,25 +288,25 @@ export function joinSession(sessionId: string, username: string, callbacks: Play
   }
 
   interactable.ws.onPoolMessage = (packet) => {
-    interactable.state = WebsocketState.IDLE;
+    interactable.state = WebSocketState.IDLE;
     callbacks.onChatMessage(packet.payload);
   }
 
-  function generatePromise<T = null>(targetFunction: keyof WebsocketConnection, timeout?: number): Promise<WebsocketResult<T>> {
+  function generatePromise<T = null>(targetFunction: keyof WebSocketConnection, timeout?: number): Promise<WebSocketResult<T>> {
     return _generatePromise<T>(interactable, targetFunction, timeout);
   }
 
   return interactable;
 }
 
-function _generatePromise<T = null>(interactable: WebsocketInteraction, targetFunction: keyof WebsocketConnection, timeout: number = 5000): Promise<WebsocketResult<T>> {
+function _generatePromise<T = null>(interactable: WebSocketInteraction, targetFunction: keyof WebSocketConnection, timeout: number = 5000): Promise<WebSocketResult<T>> {
   return new Promise((resolve, reject) => {
     const func = interactable.ws[targetFunction];
 
     if (!func) throw new Error("Function was not found on interactable");
 
     const timer = setTimeout(() => {
-      const result: WebsocketResult = {
+      const result: WebSocketResult = {
         ok: false,
         message: "timed out",
       };
@@ -318,8 +318,8 @@ function _generatePromise<T = null>(interactable: WebsocketInteraction, targetFu
     }, timeout);
 
     // @ts-expect-error Function is 100% compatible, unless somehow the universe said no
-    interactable.ws[targetFunction] = (packet: WebsocketPacket<T>) => {
-      const result: WebsocketResult<T> = {
+    interactable.ws[targetFunction] = (packet: WebSocketPacket<T>) => {
+      const result: WebSocketResult<T> = {
         packet: packet,
         ok: packet.status_code == 200,
         message: "success",

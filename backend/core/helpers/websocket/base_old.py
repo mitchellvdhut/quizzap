@@ -2,11 +2,7 @@ import logging
 from typing import Any, Type
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from app.quiz.schemas.websocket import GlobalMessageRequestSchema
-from core.helpers.websocket.commands.global_message import GlobalMessageCommand
-from core.helpers.websocket.commands.default import DefaultCommand
-from core.helpers.websocket.commands.pool_message import PoolMessageCommand
-from core.helpers.websocket.classes.command_factory import WebSocketCommandRegistry
-from core.helpers.websocket.classes.websocket import WebSocketConnection
+from backend.core.helpers.websocket.classes.websocket import WebSocketConnection
 from core.enums.websocket import WebSocketActionEnum
 from core.exceptions.base import CustomException
 from core.exceptions.websocket import (
@@ -27,6 +23,7 @@ class BaseWebSocketService:
         websocket: WebSocket,
         perms: PermList | None = None,
         schema: Type[BaseWebSocketPacketSchema] = BaseWebSocketPacketSchema,
+        actions: dict | None = None,
     ) -> None:
         self.manager = manager
         self.schema = schema
@@ -36,11 +33,14 @@ class BaseWebSocketService:
 
         self.ws = WebSocketConnection(websocket)
 
-        reg = WebSocketCommandRegistry(self.manager, default=DefaultCommand)
-        reg.register(WebSocketActionEnum.POOL_MESSAGE, PoolMessageCommand)
-        reg.register(WebSocketActionEnum.GLOBAL_MESSAGE, GlobalMessageCommand)
-
-        self.registry = reg
+        if not actions:
+            self.actions = {
+                WebSocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
+                WebSocketActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
+                WebSocketActionEnum.SESSION_CLOSE.value: self.handle_session_close,
+            }
+        else:
+            self.actions = actions
 
     async def start(
         self,

@@ -1,6 +1,6 @@
 import logging
 from typing import Any, TypedDict
-from core.helpers.websocket.websocket import WebSocketConnection
+from core.helpers.websocket.classes.websocket import WebSocketConnection
 
 
 class ClientConnection(TypedDict):

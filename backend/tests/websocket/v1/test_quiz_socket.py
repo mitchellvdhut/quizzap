@@ -10,7 +10,7 @@ from starlette.testclient import WebSocketTestSession
 
 import core.exceptions.websocket as exc
 from core.enums.websocket import (
-    WebsocketActionEnum as wae,
+    WebSocketActionEnum as wae,
     QuizSessionActionEnum as qsae,
 )
 

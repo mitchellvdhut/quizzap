@@ -1,72 +1,72 @@
 from core.helpers.websocket.schemas.docs import (
-    RequestWebsocketDocsSchema,
-    ResponseWebsocketDocsSchema,
-    WebsocketDocsSchema,
-    WebsocketPacketParams,
+    RequestWebSocketDocsSchema,
+    ResponseWebSocketDocsSchema,
+    WebSocketDocsSchema,
+    WebSocketPacketParams,
 )
-from core.enums.websocket import WebsocketActionEnum
+from core.enums.websocket import WebSocketActionEnum
 
 
 actions = {}
 
 
-actions[WebsocketActionEnum.STATUS_CODE] = WebsocketDocsSchema(
+actions[WebSocketActionEnum.STATUS_CODE] = WebSocketDocsSchema(
     info="Action for providing feedback.",
-    response=ResponseWebsocketDocsSchema(info="Response with HTTP status code"),
+    response=ResponseWebSocketDocsSchema(info="Response with HTTP status code"),
 )
 
 
-actions[WebsocketActionEnum.POOL_MESSAGE] = WebsocketDocsSchema(
+actions[WebSocketActionEnum.POOL_MESSAGE] = WebSocketDocsSchema(
     info="Action for sending a message to the pool.",
-    request=RequestWebsocketDocsSchema(
+    request=RequestWebSocketDocsSchema(
         info="Send a message to the pool",
-        params=WebsocketPacketParams(payload={"message": "string"}),
+        params=WebSocketPacketParams(payload={"message": "string"}),
     ),
-    response=ResponseWebsocketDocsSchema(
+    response=ResponseWebSocketDocsSchema(
         info="Receive a message from your pool.",
-        params=WebsocketPacketParams(payload={"message": "string"}),
+        params=WebSocketPacketParams(payload={"message": "string"}),
     ),
 )
 
 
-actions[WebsocketActionEnum.GLOBAL_MESSAGE] = WebsocketDocsSchema(
+actions[WebSocketActionEnum.GLOBAL_MESSAGE] = WebSocketDocsSchema(
     info="Action for sending a message to all connections.",
-    request=RequestWebsocketDocsSchema(
+    request=RequestWebSocketDocsSchema(
         info="Send a message to all connections",
-        params=WebsocketPacketParams(payload={"message": "string"}),
+        params=WebSocketPacketParams(payload={"message": "string"}),
     ),
-    response=ResponseWebsocketDocsSchema(
+    response=ResponseWebSocketDocsSchema(
         info="Receive a globally broadcasted message.",
-        params=WebsocketPacketParams(payload={"message": "string"}),
+        params=WebSocketPacketParams(payload={"message": "string"}),
     ),
 )
 
 
-actions[WebsocketActionEnum.USER_CONNECT] = WebsocketDocsSchema(
+actions[WebSocketActionEnum.USER_CONNECT] = WebSocketDocsSchema(
     info="Action for indicating a user has connected.",
-    response=ResponseWebsocketDocsSchema(
+    response=ResponseWebSocketDocsSchema(
         info="Receive the username of the newly connected user.",
-        params=WebsocketPacketParams(payload={"username": "string"}),
+        params=WebSocketPacketParams(payload={"username": "string"}),
     ),
 )
 
 
-actions[WebsocketActionEnum.USER_DISCONNECT] = WebsocketDocsSchema(
+actions[WebSocketActionEnum.USER_DISCONNECT] = WebSocketDocsSchema(
     info="Action for indicating a user has disconnected.",
-    response=ResponseWebsocketDocsSchema(
+    response=ResponseWebSocketDocsSchema(
         info="Receive the username of the disconnected user.",
-        params=WebsocketPacketParams(payload={"username": "string"}),
+        params=WebSocketPacketParams(payload={"username": "string"}),
     ),
 )
 
 
-actions[WebsocketActionEnum.SESSION_CLOSE] = WebsocketDocsSchema(
+actions[WebSocketActionEnum.SESSION_CLOSE] = WebSocketDocsSchema(
     info="Action for indicating the session has been irriversibly closed.",
-    request=RequestWebsocketDocsSchema(
+    request=RequestWebSocketDocsSchema(
         info="Request termination of quiz session closage."
     ),
-    response=ResponseWebsocketDocsSchema(
+    response=ResponseWebSocketDocsSchema(
         info="Receive indication of session closage.",
-        params=WebsocketPacketParams(payload={"message": "string"}),
+        params=WebSocketPacketParams(payload={"message": "string"}),
     ),
 )

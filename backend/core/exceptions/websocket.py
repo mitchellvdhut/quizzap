@@ -115,6 +115,14 @@ class AlreadySwipedException(CustomException):
     message = "this user has already swiped this recipe in this session"
 
 
+class IncompletePayloadException(CustomException):
+    status_code = 422
+    error_status_code = "WEBSOCKET__INCOMPLETE_PAYLOAD"
+    message = "payload incomplete; missing: []"
+
+    def __init__(self, errors: str) -> None:
+        self.message = f"payload incomplete; missing: {errors}"
+
 class ActionNotImplementedException(CustomException):
     status_code = 501
     error_status_code = "WEBSOCKET__ACTION_NOT_IMPLEMENTED"
